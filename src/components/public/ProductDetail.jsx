@@ -5,7 +5,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import Footer from "../common/customer/Footer";
 import Navbar from "../common/customer/Navbar";
 
-const PackageDetail = () => {
+const ProductDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const [productData, setProductData] = useState(null);
@@ -14,31 +14,13 @@ const PackageDetail = () => {
   const [isFavorite, setIsFavorite] = useState(false);
   const token = localStorage.getItem("token");
 
-  // Placeholder data for a single dairy product
-  const placeholderProduct = {
-    _id: "1",
-    title: "Fresh Whole Milk",
-    description: "Experience the pure, creamy taste of fresh whole milk, sourced directly from local, grass-fed cows. Rich in calcium and essential vitamins, it's the perfect choice for your family's daily needs. Enjoy it chilled, with cereal, or in your favorite recipes.",
-    price: 45,
-    image: "https://images.unsplash.com/photo-1550583724-b2692b85b150?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80",
-    details: [
-      "100% Grass-Fed",
-      "Pasteurized & Homogenized",
-      "Rich in Vitamin D and Calcium",
-      "No Artificial Hormones",
-    ],
-    bestBefore: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(), // 7 days from now
-  };
-
   useEffect(() => {
     const fetchProductDetails = async () => {
       try {
-        const res = await axios.get(`http://localhost:3000/api/v1/package/${id}`);
+        const res = await axios.get(`/api/v1/products/${id}`);
         setProductData(res.data);
       } catch (err) {
-        console.log("Backend not available, using placeholder data for product detail page");
-        setProductData(placeholderProduct);
-        setError("Demo Mode: Showing sample product details.");
+        setError("Failed to load product details.");
       } finally {
         setLoading(false);
       }
@@ -47,27 +29,23 @@ const PackageDetail = () => {
   }, [id]);
 
   if (loading) return <div className="text-center py-20"><div className="dairy-spinner mx-auto"></div></div>;
+  if (error) return <div className="text-center py-20 text-red-500">{error}</div>;
 
   return (
     <>
       <Navbar />
       <div className="container mx-auto px-6 py-20">
-        {error && (
-          <div className="text-center mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-            <p className="text-blue-800 font-medium">{error}</p>
-          </div>
-        )}
         {productData && (
           <>
             {/* Hero Section */}
             <div className="relative w-full h-[400px] rounded-lg overflow-hidden shadow-lg">
               <img
-                src={productData.image}
-                alt={productData.title}
+                src={`http://localhost:3001/uploads/${productData.image}`}
+                alt={productData.name}
                 className="w-full h-full object-cover"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-black opacity-70 flex items-center justify-center">
-                <h1 className="text-white text-5xl font-bold shadow-lg dairy-heading">{productData.title}</h1>
+                <h1 className="text-white text-5xl font-bold shadow-lg dairy-heading">{productData.name}</h1>
               </div>
             </div>
 
@@ -78,21 +56,29 @@ const PackageDetail = () => {
                 <h3 className="text-3xl font-bold text-blue-800 mb-6 flex items-center">
                   <FaInfoCircle className="mr-3" /> Product Details
                 </h3>
-                <ul className="list-none space-y-4">
-                  {productData.details?.map((item, index) => (
-                    <li key={index} className="flex items-start space-x-3">
-                      <span className="text-blue-600 font-bold text-xl">✓</span>
-                      <span className="text-gray-700 text-lg">{item}</span>
-                    </li>
-                  ))}
-                </ul>
+                <p className="text-lg text-gray-700 mt-4 leading-relaxed">{productData.description}</p>
+                 <div className="mt-4">
+                    <h4 className="font-semibold">Brand:</h4> <p>{productData.brand}</p>
+                    <h4 className="font-semibold">Category:</h4> <p>{productData.category}</p>
+                    <h4 className="font-semibold">Unit:</h4> <p>{productData.unit}</p>
+                    <h4 className="font-semibold">Organic:</h4> <p>{productData.isOrganic ? 'Yes' : 'No'}</p>
+                 </div>
+                 <div className="mt-4">
+                    <h4 className="text-xl font-bold text-gray-800 mb-2">Nutritional Information</h4>
+                    <ul className="list-disc list-inside">
+                      <li>Calories: {productData.nutritionalInfo?.calories}</li>
+                      <li>Protein: {productData.nutritionalInfo?.protein}g</li>
+                      <li>Fat: {productData.nutritionalInfo?.fat}g</li>
+                      <li>Carbohydrates: {productData.nutritionalInfo?.carbohydrates}g</li>
+                      <li>Calcium: {productData.nutritionalInfo?.calcium}mg</li>
+                    </ul>
+                 </div>
               </div>
 
               {/* Right Side - Info & Actions */}
               <div>
-                <h2 className="text-4xl font-bold text-gray-900 dairy-heading">{productData.title}</h2>
-                <p className="text-lg text-gray-700 mt-4 leading-relaxed">{productData.description}</p>
-
+                <h2 className="text-4xl font-bold text-gray-900 dairy-heading">{productData.name}</h2>
+                
                 <div className="mt-8 space-y-4">
                   <p className="flex items-center text-gray-800 text-2xl">
                     <FaTag className="mr-3 text-blue-600" />
@@ -105,7 +91,7 @@ const PackageDetail = () => {
                       <FaCalendarCheck className="mr-3 text-green-600" /> Best Before
                     </h3>
                     <span className="bg-green-100 text-green-800 px-4 py-2 rounded-full text-md font-semibold">
-                      {new Date(productData.bestBefore).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}
+                      {new Date(productData.expiryDate).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}
                     </span>
                   </div>
                 </div>
@@ -137,5 +123,5 @@ const PackageDetail = () => {
   );
 };
 
-export default PackageDetail;
+export default ProductDetail;
 

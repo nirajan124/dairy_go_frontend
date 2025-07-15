@@ -26,7 +26,7 @@ const Products = () => {
     const fetchProducts = async () => {
       try {
         setLoading(true);
-        const res = await axios.get("http://localhost:3000/api/v1/package");
+        const res = await axios.get("/api/v1/products");
         setProducts(res.data);
         setError(null);
       } catch (err) {
@@ -66,8 +66,14 @@ const Products = () => {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {products.map((pkg) => (
-              <ProductCard key={pkg._id} packageData={pkg} />
+            {products.map((product) => (
+              <ProductCard key={product._id} packageData={{
+                ...product,
+                title: product.name, // for compatibility with ProductCard
+                image: product.image,
+                price: product.price,
+                description: product.description
+              }} />
             ))}
           </div>
         )}

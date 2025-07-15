@@ -7,7 +7,7 @@ const ProductCard = ({ packageData }) => {
 
   // Use a default dairy product image if none is provided
   const imageUrl = image 
-    ? `http://localhost:3000/uploads/${image}`
+    ? `http://localhost:3001/uploads/${image}`
     : "https://images.unsplash.com/photo-1628038455746-932b734d3154?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D";
 
   return (
