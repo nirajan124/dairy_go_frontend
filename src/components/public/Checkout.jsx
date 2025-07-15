@@ -12,8 +12,7 @@ const Checkout = () => {
     fullName: "",
     email: "",
     phone: "",
-    tickets: 1,
-    pickupLocation: "",
+    quantity: 1,
     paymentMethod: "khalti",
   });
   const [loading, setLoading] = useState(true);
@@ -22,10 +21,10 @@ const Checkout = () => {
   useEffect(() => {
     const fetchPackageDetails = async () => {
       try {
-        const res = await axios.get(`http://localhost:3000/api/v1/package/${id}`);
+        const res = await axios.get(`/api/v1/products/${id}`);
         setPackageData(res.data);
       } catch (err) {
-        setError("Failed to load package details. Please try again.");
+        setError("Failed to load product details. Please try again.");
       } finally {
         setLoading(false);
       }
@@ -41,9 +40,9 @@ const Checkout = () => {
   // Khalti Payment Configuration
   const khaltiConfig = {
     publicKey: "test_public_key_dc74e0fd57cb46cd93832aee0a390234",
-    productIdentity: packageData._id,
-    productName: packageData?.title || "Trek Package",
-    productUrl: `http://localhost:5173/packages/${packageData._id}`,
+    productIdentity: packageData?._id,
+    productName: packageData?.name || "Dairy Product",
+    productUrl: `http://localhost:5173/products/${packageData?._id}`,
     eventHandler: {
       onSuccess(payload) {
         console.log("Payment Success:", payload);
@@ -55,8 +54,8 @@ const Checkout = () => {
             fullName: formData.fullName,
             email: formData.email,
             phone: formData.phone,
-            tickets: formData.tickets,
-            pickupLocation: formData.pickupLocation,
+            tickets: formData.quantity,
+            pickupLocation: "", // No pickup location for online payment
             paymentMethod: "khalti",
             paymentId: payload.idx, // Save Khalti transaction ID
           })
@@ -81,12 +80,14 @@ const Checkout = () => {
   const khaltiCheckout = new KhaltiCheckout(khaltiConfig);
 
   const handlePayment = () => {
-    const totalAmount = packageData.price * formData.tickets * 100; // Convert to paisa
+    if (!packageData) return;
+    const totalAmount = packageData.price * formData.quantity * 100; // Convert to paisa
     khaltiCheckout.show({ amount: totalAmount });
   };
 
   if (loading) return <p className="text-center py-10 text-lg">Loading checkout details...</p>;
   if (error) return <p className="text-center text-red-600 py-10">{error}</p>;
+  if (!packageData) return <p className="text-center py-10 text-lg">Product not found.</p>;
 
   return (
     <>
@@ -100,46 +101,14 @@ const Checkout = () => {
             <h3 className="text-2xl font-bold text-gray-800 mb-4">📌 Booking Summary</h3>
             <div className="flex flex-col items-center">
               <img 
-                src={`http://localhost:3000/uploads/${packageData.image}`} 
-                alt={packageData.title} 
+                src={`http://localhost:3001/uploads/${packageData.image}`} 
+                alt={packageData.name} 
                 className="w-full h-64 object-cover rounded-lg shadow-md"
               />
               <div className="mt-4 w-full">
-                <h4 className="text-xl font-semibold text-gray-700">{packageData.title}</h4>
-                <p className="text-gray-500">{packageData.duration}</p>
-                <p className="text-gray-800 font-bold mt-2 text-lg">₹{packageData.price} / person</p>
+                <h4 className="text-xl font-semibold text-gray-700">{packageData.name}</h4>
+                <p className="text-gray-800 font-bold mt-2 text-lg">₹{packageData.price}</p>
                 <p className="text-gray-600 mt-2">{packageData.description}</p>
-
-                {/* Available Dates */}
-                <div className="mt-4">
-                  <h4 className="text-lg font-semibold text-gray-700">📅 Available Dates</h4>
-                  <ul className="text-gray-500">
-                    {packageData.availableDates.map((date, index) => (
-                      <li key={index}>🗓 {new Date(date).toDateString()}</li>
-                    ))}
-                  </ul>
-                </div>
-
-                {/* Itinerary Section */}
-                <div className="mt-6">
-                  <h4 className="text-lg font-semibold text-gray-700">🛤 Itinerary</h4>
-                  <ul className="space-y-2 mt-2">
-                    {Array.isArray(packageData.itinerary) && packageData.itinerary.length > 0 ? (
-                      packageData.itinerary.map((day, index) => {
-                        let dayData = typeof day === "string" ? JSON.parse(day) : day;
-
-                        return (
-                          <li key={index} className="border-l-4 border-red-500 pl-4 py-2">
-                            <h5 className="text-red-700 font-semibold">Day {index + 1}: {dayData.title || `Day ${index + 1}`}</h5>
-                            <p className="text-gray-600">{dayData.description || dayData}</p>
-                          </li>
-                        );
-                      })
-                    ) : (
-                      <p className="text-gray-500">No itinerary available for this package.</p>
-                    )}
-                  </ul>
-                </div>
               </div>
             </div>
           </div>
@@ -185,19 +154,18 @@ const Checkout = () => {
                 />
               </div>
               <div className="mt-4">
-                <label className="block text-gray-800 font-semibold mb-2">Number of People</label>
+                <label className="block text-gray-800 font-semibold mb-2">Number of Product</label>
                 <input
                   type="number"
-                  name="tickets"
-                  placeholder="Number of people"
-                  value={formData.tickets}
+                  name="quantity"
+                  placeholder="Number of product"
+                  value={formData.quantity}
                   min="1"
                   onChange={handleChange}
                   className="w-full px-4 py-3 border rounded-md focus:ring-2 focus:ring-red-400"
                   required
                 />
               </div>
-
               {/* Payment Button */}
               <button
                 type="button"
