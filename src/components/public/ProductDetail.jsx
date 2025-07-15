@@ -28,7 +28,7 @@ const ProductDetail = () => {
     fetchProductDetails();
   }, [id]);
 
-  if (loading) return <div className="text-center py-20"><div className="dairy-spinner mx-auto"></div></div>;
+  if (loading) return <div className="text-center py-20"><div className="dairy-spinner mx-auto" data-testid="dairy-spinner"></div></div>;
   if (error) return <div className="text-center py-20 text-red-500">{error}</div>;
 
   return (
