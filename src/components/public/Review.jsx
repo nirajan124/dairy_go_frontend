@@ -2,8 +2,12 @@ import React, { useState } from "react";
 import { FaRegStar, FaStar, FaStarHalfAlt } from "react-icons/fa";
 import Footer from "../../components/common/customer/Footer";
 import Navbar from "../../components/common/customer/Navbar";
+import { useEffect } from "react";
+import axios from "axios";
 
 const Review = () => {
+  const [products, setProducts] = useState([]);
+
   const [reviews, setReviews] = useState([
     {
       id: 1,
@@ -24,6 +28,18 @@ const Review = () => {
     rating: 0,
     comment: "",
   });
+
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const res = await axios.get("/api/v1/products");
+        setProducts(res.data);
+      } catch (err) {
+        setProducts([]);
+      }
+    };
+    fetchProducts();
+  }, []);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -77,9 +93,9 @@ const Review = () => {
                 required
               >
                 <option value="">Select a Package</option>
-                {packages.map((pkg) => (
-                  <option key={pkg._id} value={pkg._id}>
-                    {pkg.title}
+                {products.map((product) => (
+                  <option key={product._id} value={product._id}>
+                    {product.name}
                   </option>
                 ))}
               </select>
