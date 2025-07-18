@@ -88,13 +88,6 @@ const Login = () => {
             Welcome back! Please enter your details.
           </p>
 
-          {/* Demo Mode Notice */}
-          <div className="mb-6 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-            <p className="text-blue-800 text-sm text-center">
-              <strong>Demo Mode:</strong> Backend not connected. Use any email/password to login.
-            </p>
-          </div>
-
           <form onSubmit={handleLogin} className="space-y-6">
             <div>
               <label
@@ -144,24 +137,6 @@ const Login = () => {
               {mutation.isPending ? "Logging in..." : "LOGIN"}
             </button>
           </form>
-
-          <div className="flex items-center justify-center my-6">
-            <span className="w-16 h-px bg-gray-300"></span>
-            <span className="mx-2 text-sm text-gray-500">OR</span>
-            <span className="w-16 h-px bg-gray-300"></span>
-          </div>
-
-          <div className="flex justify-center space-x-4">
-            <button className="p-3 text-gray-600 bg-white border border-gray-300 rounded-full hover:bg-gray-100">
-              <FaGoogle size={20} />
-            </button>
-            <button className="p-3 text-gray-600 bg-white border border-gray-300 rounded-full hover:bg-gray-100">
-              <FaFacebook size={20} />
-            </button>
-            <button className="p-3 text-gray-600 bg-white border border-gray-300 rounded-full hover:bg-gray-100">
-              <FaApple size={20} />
-            </button>
-          </div>
 
           <p className="mt-6 text-sm text-center text-gray-500">
             Don't have an account?{" "}
