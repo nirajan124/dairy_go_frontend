@@ -60,6 +60,8 @@ app.use((req, res, next) => {
 
 // Set static folder
 app.use(express.static(path.join(__dirname, 'public')));
+// Serve uploads folder for product images
+app.use('/uploads', express.static(path.join(__dirname, 'public/uploads')));
 
 // app.use(express.static('public'));
 
