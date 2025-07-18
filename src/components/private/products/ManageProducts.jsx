@@ -25,8 +25,19 @@ const ManageProducts = () => {
     fetchProducts();
   }, [message]);
 
-  const handleDelete = (id) => {
-    alert("Delete functionality is not available in Demo Mode.");
+  const handleDelete = async (id) => {
+    if (!window.confirm("Are you sure you want to delete this product? This action cannot be undone.")) return;
+    setLoading(true);
+    setMessage("");
+    setError("");
+    try {
+      await axios.delete(`/api/v1/products/${id}`);
+      setMessage("Product deleted successfully!");
+    } catch (err) {
+      setError("Failed to delete product. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const openEditModal = (product) => {
