@@ -29,13 +29,29 @@ const Review = () => {
     comment: "",
   });
 
+  const placeholderProducts = [
+    { _id: "1", name: "Fresh Whole Milk" },
+    { _id: "2", name: "Organic Greek Yogurt" },
+    { _id: "3", name: "Aged Cheddar Cheese" },
+    { _id: "4", name: "Fresh Butter" },
+    { _id: "5", name: "Homemade Paneer" },
+    { _id: "6", name: "Fresh Cream" },
+    { _id: "7", name: "Skimmed Milk" },
+    { _id: "8", name: "Probiotic Buttermilk" },
+    { _id: "9", name: "Mozzarella Cheese" }
+  ];
+
   useEffect(() => {
     const fetchProducts = async () => {
       try {
         const res = await axios.get("/api/v1/products");
-        setProducts(res.data);
+        if (Array.isArray(res.data) && res.data.length > 0) {
+          setProducts(res.data);
+        } else {
+          setProducts(placeholderProducts);
+        }
       } catch (err) {
-        setProducts([]);
+        setProducts(placeholderProducts);
       }
     };
     fetchProducts();
