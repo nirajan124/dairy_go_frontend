@@ -6,6 +6,7 @@ const Users = () => {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [selectedUser, setSelectedUser] = useState(null);
 
   useEffect(() => {
     const fetchUsers = async () => {
@@ -25,6 +26,8 @@ const Users = () => {
     };
     fetchUsers();
   }, []);
+
+  const closeModal = () => setSelectedUser(null);
 
   return (
     <div className="space-y-6">
@@ -57,7 +60,7 @@ const Users = () => {
                     </span>
                   </td>
                   <td className="px-6 py-4 text-sm text-gray-700">
-                    <button className="text-red-500 hover:text-red-700 mr-2" onClick={() => alert(`View user details for ${user.fname || user.name}`)}>
+                    <button className="text-blue-500 hover:text-blue-700 mr-2" onClick={() => setSelectedUser(user)}>
                       View
                     </button>
                     {user.status === "Active" && (
@@ -75,6 +78,24 @@ const Users = () => {
               ))}
             </tbody>
           </table>
+        </div>
+      )}
+      {/* User Details Modal */}
+      {selectedUser && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
+          <div className="bg-white p-8 rounded-xl shadow-lg w-full max-w-md relative">
+            <button onClick={closeModal} className="absolute top-3 right-3 text-2xl text-gray-400 hover:text-gray-700 focus:outline-none" aria-label="Close">&times;</button>
+            <h3 className="text-2xl font-bold mb-4 text-blue-700">User Details</h3>
+            <div className="space-y-2">
+              <div><span className="font-semibold text-gray-700">Name:</span> {selectedUser.fname || selectedUser.name} {selectedUser.lname || ""}</div>
+              <div><span className="font-semibold text-gray-700">Email:</span> {selectedUser.email}</div>
+              <div><span className="font-semibold text-gray-700">Role:</span> {selectedUser.role}</div>
+              <div><span className="font-semibold text-gray-700">Status:</span> {selectedUser.status || (selectedUser.isActive ? "Active" : "Inactive")}</div>
+              {selectedUser.phone && <div><span className="font-semibold text-gray-700">Phone:</span> {selectedUser.phone}</div>}
+              {selectedUser.address && <div><span className="font-semibold text-gray-700">Address:</span> {selectedUser.address}</div>}
+              {/* Add more fields as needed */}
+            </div>
+          </div>
         </div>
       )}
     </div>
