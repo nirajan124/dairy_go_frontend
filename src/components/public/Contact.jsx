@@ -1,9 +1,45 @@
-import React from "react";
+import React, { useState } from "react";
 import { FaEnvelope, FaMapMarkerAlt, FaPhone, FaClock, FaTruck } from "react-icons/fa";
+import axios from "axios";
 import Footer from "../../components/common/customer/Footer";
 import Navbar from "../../components/common/customer/Navbar";
 
 const Contact = () => {
+  const [form, setForm] = useState({
+    name: "",
+    email: "",
+    phone: "",
+    subject: "",
+    message: ""
+  });
+  const [loading, setLoading] = useState(false);
+  const [success, setSuccess] = useState("");
+  const [error, setError] = useState("");
+
+  const handleChange = (e) => {
+    setForm({ ...form, [e.target.name]: e.target.value });
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setSuccess("");
+    setError("");
+    if (!form.name || !form.email || !form.message) {
+      setError("Name, Email, and Message are required.");
+      return;
+    }
+    setLoading(true);
+    try {
+      await axios.post("/api/v1/contact", form);
+      setSuccess("Message sent successfully!");
+      setForm({ name: "", email: "", phone: "", subject: "", message: "" });
+    } catch (err) {
+      setError("Failed to send message. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <>
       <Navbar />
@@ -72,24 +108,24 @@ const Contact = () => {
           <h2 className="text-2xl font-semibold text-blue-800 mb-4 text-center">
             Send Us a Message
           </h2>
-          <form className="space-y-6">
+          <form className="space-y-6" onSubmit={handleSubmit}>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label htmlFor="name" className="block text-gray-800 font-semibold mb-2">Full Name</label>
-                <input type="text" id="name" className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400" />
+                <input type="text" id="name" name="name" value={form.name} onChange={handleChange} className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400" />
               </div>
               <div>
                 <label htmlFor="email" className="block text-gray-800 font-semibold mb-2">Email Address</label>
-                <input type="email" id="email" className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400" />
+                <input type="email" id="email" name="email" value={form.email} onChange={handleChange} className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400" />
               </div>
             </div>
             <div>
               <label htmlFor="phone" className="block text-gray-800 font-semibold mb-2">Phone Number</label>
-              <input type="tel" id="phone" className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400" />
+              <input type="tel" id="phone" name="phone" value={form.phone} onChange={handleChange} className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400" />
             </div>
             <div>
               <label htmlFor="subject" className="block text-gray-800 font-semibold mb-2">Subject</label>
-              <select id="subject" className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400">
+              <select id="subject" name="subject" value={form.subject} onChange={handleChange} className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400">
                 <option value="">Select a subject</option>
                 <option value="order">Order Inquiry</option>
                 <option value="delivery">Delivery Question</option>
@@ -100,10 +136,12 @@ const Contact = () => {
             </div>
             <div>
               <label htmlFor="message" className="block text-gray-800 font-semibold mb-2">Message</label>
-              <textarea id="message" rows="5" className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400" placeholder="Tell us how we can help you..."></textarea>
+              <textarea id="message" name="message" value={form.message} onChange={handleChange} rows="5" className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400" placeholder="Tell us how we can help you..."></textarea>
             </div>
-            <button type="submit" className="w-full bg-blue-800 text-white py-3 px-6 rounded-md hover:bg-blue-700 transition duration-300 font-semibold">
-              Send Message
+            {success && <div className="bg-green-100 text-green-700 p-3 rounded">{success}</div>}
+            {error && <div className="bg-red-100 text-red-700 p-3 rounded">{error}</div>}
+            <button type="submit" className="w-full bg-blue-800 text-white py-3 px-6 rounded-md hover:bg-blue-700 transition duration-300 font-semibold" disabled={loading}>
+              {loading ? "Sending..." : "Send Message"}
             </button>
           </form>
         </div>

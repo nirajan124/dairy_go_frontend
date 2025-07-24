@@ -14,10 +14,13 @@ const Users = () => {
       setError("");
       try {
         const token = localStorage.getItem("token");
-        const res = await axios.get("/api/v1/auth/getAllCustomers", {
+        const res = await axios.get("/api/v1/customers/getAllCustomers", {
           headers: { Authorization: `Bearer ${token}` }
         });
         setUsers(res.data.data || res.data || []);
+        // Debug: log all customer users and their _id
+        const usersList = res.data.data || res.data || [];
+        console.log("Customer users and their _id:", usersList.filter(u => u.role === "customer").map(u => ({_id: u._id, email: u.email, name: u.fname})));
       } catch (err) {
         setError("Failed to fetch users.");
       } finally {
@@ -28,6 +31,20 @@ const Users = () => {
   }, []);
 
   const closeModal = () => setSelectedUser(null);
+
+  const handleDelete = async (userId) => {
+    if (!window.confirm("Are you sure you want to delete this user? This action cannot be undone.")) return;
+    try {
+      const token = localStorage.getItem("token");
+      await axios.delete(`/api/v1/customers/deleteCustomer/${userId}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setUsers(users.filter(u => u._id !== userId));
+      alert("User deleted successfully.");
+    } catch (err) {
+      alert("Failed to delete user. Please try again.");
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -71,6 +88,11 @@ const Users = () => {
                     {user.status === "Inactive" && (
                       <button className="text-green-500 hover:text-green-700" onClick={() => alert(`Activate user ${user.fname || user.name}`)}>
                         Activate
+                      </button>
+                    )}
+                    {user.role === "customer" && (
+                      <button className="text-red-500 hover:text-red-700 ml-2" onClick={() => handleDelete(user._id)} title="Delete User">
+                        <FaTrash />
                       </button>
                     )}
                   </td>

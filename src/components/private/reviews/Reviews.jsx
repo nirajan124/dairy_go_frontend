@@ -2,32 +2,56 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { FaCheck, FaTrash } from "react-icons/fa";
 
+const statusOptions = ["All", "Pending", "Approved", "Rejected"];
+
 const Reviews = () => {
   const [reviews, setReviews] = useState([]);
+  const [status, setStatus] = useState("All");
+
+  const fetchReviews = async (status) => {
+    try {
+      let url = "/api/v1/reviews";
+      if (status && status !== "All") url += `?status=${status}`;
+      const res = await axios.get(url);
+      setReviews(res.data);
+    } catch (err) {
+      setReviews([]);
+    }
+  };
 
   useEffect(() => {
-    const fetchReviews = async () => {
-      try {
-        const res = await axios.get("http://localhost:3001/api/v1/reviews");
-        setReviews(res.data);
-      } catch (err) {
-        setReviews([]);
-      }
-    };
-    fetchReviews();
-  }, []);
+    fetchReviews(status);
+  }, [status]);
+
+  const handleApprove = async (id) => {
+    await axios.put(`/api/v1/reviews/${id}/approve`);
+    fetchReviews(status);
+  };
+  const handleReject = async (id) => {
+    await axios.put(`/api/v1/reviews/${id}/reject`);
+    fetchReviews(status);
+  };
 
   return (
     <div className="space-y-6">
       <h2 className="text-2xl font-semibold">Customer Reviews</h2>
+      <div className="mb-4">
+        <label className="mr-2 font-medium">Filter by Status:</label>
+        <select value={status} onChange={e => setStatus(e.target.value)} className="border p-2 rounded">
+          {statusOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+        </select>
+      </div>
       <div className="overflow-x-auto">
         <table className="min-w-full bg-white shadow-md rounded-lg">
           <thead>
             <tr className="bg-gray-100">
               <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">User</th>
+              <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Email</th>
               <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Package</th>
               <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Rating</th>
               <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Review</th>
+              <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Date</th>
+              <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Status</th>
               <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Actions</th>
             </tr>
           </thead>
@@ -35,6 +59,7 @@ const Reviews = () => {
             {reviews.map((review) => (
               <tr key={review._id} className="border-b hover:bg-gray-100">
                 <td className="px-6 py-4 text-sm text-gray-700">{review.customerId?.fname || review.customerId?.name || "Unknown"}</td>
+                <td className="px-6 py-4 text-sm text-gray-700">{review.customerId?.email || "Unknown"}</td>
                 <td className="px-6 py-4 text-sm text-gray-700">{review.packageId?.name || review.packageId?.title || "Unknown"}</td>
                 <td className="px-6 py-4 text-sm text-gray-700">
                   {Array.from({ length: Number(review.rating) }, (_, index) => (
@@ -42,13 +67,35 @@ const Reviews = () => {
                   ))}
                 </td>
                 <td className="px-6 py-4 text-sm text-gray-700">{review.comment}</td>
+                <td className="px-6 py-4 text-sm text-gray-700">{review.date ? new Date(review.date).toLocaleDateString() : ""}</td>
                 <td className="px-6 py-4 text-sm text-gray-700">
-                  <button
-                    className="text-gray-500 hover:text-gray-700"
-                    onClick={() => alert(`Delete review ${review._id}`)}
-                  >
-                    <FaTrash />
-                  </button>
+                  <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
+                    review.status === "Approved"
+                      ? "bg-green-100 text-green-800"
+                      : review.status === "Rejected"
+                      ? "bg-red-100 text-red-800"
+                      : "bg-yellow-100 text-yellow-800"
+                  }`}>
+                    {review.status}
+                  </span>
+                </td>
+                <td className="px-6 py-4 text-sm text-gray-700">
+                  {review.status === "Pending" && (
+                    <>
+                      <button
+                        className="text-green-500 hover:text-green-700 mr-2"
+                        onClick={() => handleApprove(review._id)}
+                      >
+                        <FaCheck /> Approve
+                      </button>
+                      <button
+                        className="text-red-500 hover:text-red-700"
+                        onClick={() => handleReject(review._id)}
+                      >
+                        <FaTrash /> Reject
+                      </button>
+                    </>
+                  )}
                 </td>
               </tr>
             ))}

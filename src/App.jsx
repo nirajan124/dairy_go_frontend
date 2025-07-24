@@ -29,8 +29,9 @@ const ConfirmedOrders = lazy(() => import("./components/private/orders/Confirmed
 const Payments = lazy(() => import("./components/private/payments/Payments"));
 const Customers = lazy(() => import("./components/private/users/Users"));
 const CustomerReviews = lazy(() => import("./components/private/reviews/Reviews"));
-const Profile = lazy(() => import("./components/private/profile/profile"));
+const Profile = lazy(() => import("./components/private/profile/Profile"));
 const Settings = lazy(() => import("./components/private/setting/settings"));
+const AdminMessages = lazy(() => import("./components/private/messages/AdminMessages"));
 
 function App() {
   const router = createBrowserRouter([
@@ -115,6 +116,7 @@ function App() {
         { path: "reviews", element: <Suspense><CustomerReviews /></Suspense> },
         { path: "profile", element: <Suspense><Profile /></Suspense> },
         { path: "settings", element: <Suspense><Settings /></Suspense> },
+        { path: "messages", element: <Suspense><AdminMessages /></Suspense> },
       ],
     },
 

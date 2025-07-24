@@ -25,11 +25,14 @@ connectDB();
 // Route files
 const auth = require("./routes/customer");
 const adminAuth = require("./routes/AuthRoute");
+const customerRoutes = require("./routes/customer");
+const contactRoutes = require("./routes/ContactRoute");
 
 const product = require("./routes/ProductRoute");
 const wishlist = require("./routes/WishlistRoute");
 const khaltiRoutes = require("./routes/KhaltiRoute");
 const booking = require("./routes/BookingRoute");
+const reviewRoutes = require("./routes/ReviewRoute");
 
 // Body parser
 app.use(express.json());
@@ -69,13 +72,13 @@ app.use('/uploads', express.static(path.join(__dirname, 'public/uploads')));
 // Mount routers
 app.use("/api/v1/auth", auth);
 app.use("/api/v1/admin-auth", adminAuth);
+app.use("/api/v1/customers", customerRoutes);
+app.use("/api/v1/contact", contactRoutes);
 app.use("/api/v1/products", product);
 app.use("/api/v1/wishlist", wishlist);
 app.use("/api/khalti", khaltiRoutes);
 app.use("/api/v1/bookings", booking);
-
-
-
+app.use("/api/v1/reviews", reviewRoutes);
 
 
 const PORT = process.env.PORT || 5000;

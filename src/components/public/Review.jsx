@@ -57,11 +57,21 @@ const Review = () => {
     fetchProducts();
   }, []);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (newReview.name && newReview.rating && newReview.comment) {
-      setReviews([...reviews, { id: reviews.length + 1, ...newReview }]);
-      setNewReview({ name: "", rating: 0, comment: "" });
+    if (newReview.name && newReview.rating && newReview.comment && newReview.packageId) {
+      try {
+        await axios.post("/api/v1/reviews", {
+          rating: newReview.rating,
+          comment: newReview.comment,
+          packageId: newReview.packageId,
+          name: newReview.name
+        });
+        alert("Review submitted! Awaiting admin approval.");
+        setNewReview({ name: "", rating: 0, comment: "", packageId: "" });
+      } catch (err) {
+        alert("Failed to submit review. Please try again.");
+      }
     }
   };
 

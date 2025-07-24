@@ -95,6 +95,10 @@ const Sidebar = () => {
           <Star size={20} />
           {!isCollapsed && <span>Customer Reviews</span>}
         </Link>
+        <Link to="/admin/messages" className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-700">
+          <Star size={20} />
+          {!isCollapsed && <span>Customer Messages</span>}
+        </Link>
       </nav>
 
       <div className="pt-4 border-t border-gray-700">

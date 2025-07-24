@@ -1,7 +1,9 @@
-const Review = require('../model/Review');
+const Review = require('../models/Review');
 const findAll = async (req, res) => {
     try {
-        const reviews = await Review.find().populate(["customerId", "packageId"]);
+        const status = req.query.status;
+        const filter = status ? { status } : {};
+        const reviews = await Review.find(filter).populate(["customerId", "packageId"]);
         res.status(200).json(reviews);
     } catch (e) {
         res.json(e)
@@ -51,12 +53,28 @@ const update = async (req, res) => {
 
 
 }
-
+const approve = async (req, res) => {
+    try {
+        const review = await Review.findByIdAndUpdate(req.params.id, { status: "Approved" }, { new: true });
+        res.status(200).json(review);
+    } catch (e) {
+        res.json(e);
+    }
+};
+const reject = async (req, res) => {
+    try {
+        const review = await Review.findByIdAndUpdate(req.params.id, { status: "Rejected" }, { new: true });
+        res.status(200).json(review);
+    } catch (e) {
+        res.json(e);
+    }
+};
 module.exports = {
     findAll,
     save,
     findById,
     deleteById,
-    update
-
-}
+    update,
+    approve,
+    reject
+};
