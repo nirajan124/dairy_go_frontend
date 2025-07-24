@@ -23,8 +23,8 @@ const Settings = () => {
       }, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      alert("Password updated successfully.");
-      setIsEditingPassword(false);
+    alert("Password updated successfully.");
+    setIsEditingPassword(false);
     } catch (err) {
       alert("Failed to update password: " + (err.response?.data?.message || err.message));
     }

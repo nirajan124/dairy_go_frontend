@@ -6,7 +6,8 @@ const contactMessageSchema = new mongoose.Schema({
   phone: { type: String },
   subject: { type: String },
   message: { type: String, required: true },
-  date: { type: Date, default: Date.now }
+  date: { type: Date, default: Date.now },
+  read: { type: Boolean, default: false }
 });
 
 module.exports = mongoose.model("ContactMessage", contactMessageSchema); 

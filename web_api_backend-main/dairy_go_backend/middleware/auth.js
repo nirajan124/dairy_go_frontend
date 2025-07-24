@@ -24,7 +24,7 @@ exports.protect = asyncHandler(async (req, res, next) => {
         let decoded;
         try {
             decoded = jwt.verify(token, process.env.JWT_SECRET);
-            req.user = await Customer.findById(decoded.id).select("-password");
+        req.user = await Customer.findById(decoded.id).select("-password");
         } catch (e) {
             // If fails, try as admin Credential
             decoded = jwt.verify(token, SECRET_KEY);

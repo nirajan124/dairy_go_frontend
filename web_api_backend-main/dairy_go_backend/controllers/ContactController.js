@@ -23,4 +23,18 @@ exports.getAllMessages = async (req, res) => {
     console.error("[DEBUG] Error in getAllMessages:", err);
     res.status(500).json({ success: false, message: "Failed to fetch messages." });
   }
+};
+
+exports.markAsRead = async (req, res) => {
+  try {
+    const message = await ContactMessage.findByIdAndUpdate(
+      req.params.id,
+      { read: true },
+      { new: true }
+    );
+    if (!message) return res.status(404).json({ success: false, message: "Message not found." });
+    res.status(200).json({ success: true, message: "Marked as read.", data: message });
+  } catch (err) {
+    res.status(500).json({ success: false, message: "Failed to mark as read." });
+  }
 }; 
