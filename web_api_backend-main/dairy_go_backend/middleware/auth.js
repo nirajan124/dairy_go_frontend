@@ -1,6 +1,8 @@
 const jwt = require("jsonwebtoken");
 const asyncHandler = require("./async");
 const Customer = require("../models/Customer");
+const Credential = require("../models/Credential"); // Add this
+const SECRET_KEY = "d2f78ec5c4eb64c0bfe582ae6228a6059806a082724c9193836754dd3b8f14c4"; // Use same as AuthController
 
 // Protect routes (Authentication Middleware)
 exports.protect = asyncHandler(async (req, res, next) => {
@@ -10,21 +12,25 @@ exports.protect = asyncHandler(async (req, res, next) => {
         req.headers.authorization &&
         req.headers.authorization.startsWith("Bearer")
     ) {
-        // Extract token from Bearer header
         token = req.headers.authorization.split(" ")[1];
     }
 
-    // Ensure token exists
     if (!token) {
         return res.status(401).json({ message: "Not authorized, no token" });
     }
 
     try {
-        // Verify token
-        const decoded = jwt.verify(token, process.env.JWT_SECRET);
-
-        // Fetch user from DB (without password)
-        req.user = await Customer.findById(decoded.id).select("-password");
+        // Try to verify as Customer
+        let decoded;
+        try {
+            decoded = jwt.verify(token, process.env.JWT_SECRET);
+            req.user = await Customer.findById(decoded.id).select("-password");
+        } catch (e) {
+            // If fails, try as admin Credential
+            decoded = jwt.verify(token, SECRET_KEY);
+            req.user = await Credential.findOne({ username: decoded.username });
+            if (req.user) req.user.role = decoded.role;
+        }
 
         if (!req.user) {
             return res.status(401).json({ message: "User not found" });

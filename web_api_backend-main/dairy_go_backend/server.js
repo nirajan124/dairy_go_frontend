@@ -24,6 +24,7 @@ connectDB();
 
 // Route files
 const auth = require("./routes/customer");
+const adminAuth = require("./routes/AuthRoute");
 
 const product = require("./routes/ProductRoute");
 const wishlist = require("./routes/WishlistRoute");
@@ -67,6 +68,7 @@ app.use('/uploads', express.static(path.join(__dirname, 'public/uploads')));
 
 // Mount routers
 app.use("/api/v1/auth", auth);
+app.use("/api/v1/admin-auth", adminAuth);
 app.use("/api/v1/products", product);
 app.use("/api/v1/wishlist", wishlist);
 app.use("/api/khalti", khaltiRoutes);

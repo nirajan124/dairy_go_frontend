@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import axios from "axios";
 
 const Settings = () => {
   const [isEditingPassword, setIsEditingPassword] = useState(false);
@@ -9,15 +10,24 @@ const Settings = () => {
   const [emailNotifications, setEmailNotifications] = useState(true);
   const [smsNotifications, setSmsNotifications] = useState(true);
 
-  const handlePasswordChange = () => {
+  const handlePasswordChange = async () => {
     if (newPassword !== confirmNewPassword) {
       alert("Passwords do not match!");
       return;
     }
-
-    // Handle password change logic here (e.g., API call)
-    alert("Password updated successfully.");
-    setIsEditingPassword(false);
+    try {
+      const token = localStorage.getItem("token");
+      await axios.post("http://localhost:3001/api/v1/admin-auth/change-password", {
+        currentPassword,
+        newPassword,
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      alert("Password updated successfully.");
+      setIsEditingPassword(false);
+    } catch (err) {
+      alert("Failed to update password: " + (err.response?.data?.message || err.message));
+    }
   };
 
   return (
