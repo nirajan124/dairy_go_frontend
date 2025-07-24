@@ -6,6 +6,7 @@ const AdminMessages = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [selectedMessage, setSelectedMessage] = useState(null);
+  const [filter, setFilter] = useState("All");
 
   useEffect(() => {
     const fetchMessages = async () => {
@@ -26,14 +27,29 @@ const AdminMessages = () => {
     fetchMessages();
   }, []);
 
+  const filteredMessages = messages.filter(msg => {
+    if (filter === "All") return true;
+    if (filter === "Read") return msg.read;
+    if (filter === "Unread") return !msg.read;
+    return true;
+  });
+
   return (
     <div className="space-y-6">
       <h2 className="text-2xl font-semibold">Contact Messages</h2>
+      <div className="mb-4">
+        <label className="mr-2 font-medium">Filter by Status:</label>
+        <select value={filter} onChange={e => setFilter(e.target.value)} className="border p-2 rounded">
+          <option value="All">All</option>
+          <option value="Unread">Unread</option>
+          <option value="Read">Read</option>
+        </select>
+      </div>
       {loading ? (
         <div className="text-center py-10">Loading...</div>
       ) : error ? (
         <div className="bg-red-100 text-red-700 p-4 rounded-lg">{error}</div>
-      ) : messages.length === 0 ? (
+      ) : filteredMessages.length === 0 ? (
         <div className="text-gray-600">No messages found.</div>
       ) : (
         <div className="overflow-x-auto">
@@ -49,7 +65,7 @@ const AdminMessages = () => {
               </tr>
             </thead>
             <tbody>
-              {messages.map((msg) => (
+              {filteredMessages.map((msg) => (
                 <tr key={msg._id} className="border-b hover:bg-gray-100">
                   <td className="px-6 py-4 text-sm text-gray-700">{msg.name}</td>
                   <td className="px-6 py-4 text-sm text-gray-700">{msg.email}</td>
