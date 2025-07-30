@@ -7,4 +7,6 @@ const credSchema = new mongoose.Schema({
     email: { type: String }, // Add email field
 });
 
+const Cred = mongoose.model('creds', credSchema);
 
+module.exports = Cred;
