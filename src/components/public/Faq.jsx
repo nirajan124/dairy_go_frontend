@@ -22,7 +22,7 @@ const faqData = [
   {
     question: "What payment methods do you accept?",
     answer:
-      "We accept Credit/Debit cards, digital wallets, and cash on delivery for your convenience.",
+      "We accept Credit/Debit cards, UPI, Net Banking, digital wallets, and cash on delivery for your convenience.",
   },
   {
     question: "Can I modify or cancel my order?",
