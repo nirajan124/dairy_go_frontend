@@ -73,6 +73,8 @@ module.exports = {
     findAll,
     save,
     findById,
-    
+    deleteById,
+    update,
+    approve,
     reject
 };
