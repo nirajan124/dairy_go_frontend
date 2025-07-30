@@ -11,3 +11,14 @@ beforeAll(() => {
   };
 });
 
+describe('Dashboard (admin) component', () => {
+  it('renders dashboard heading and stats', () => {
+    render(
+      <MemoryRouter>
+        <Dashboard />
+      </MemoryRouter>
+    );
+    expect(screen.getByText(/Admin Dashboard/i)).toBeInTheDocument();
+    expect(screen.getByText(/Total Revenue/i)).toBeInTheDocument();
+  });
+}); 
