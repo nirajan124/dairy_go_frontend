@@ -50,7 +50,13 @@ const Home = () => {
       price: 95,
       image: null
     },
-   
+    {
+      _id: "6",
+      title: "Fresh Cream",
+      description: "Rich, fresh cream perfect for desserts and coffee. Sourced from premium dairy farms.",
+      price: 55,
+      image: null
+    }
   ];
 
   // Show scroll-to-top after scrolling
