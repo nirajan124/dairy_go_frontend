@@ -109,8 +109,6 @@ const AdminMessages = () => {
               <div><span className="font-semibold text-gray-700">Name:</span> {selectedMessage.name}</div>
               <div><span className="font-semibold text-gray-700">Email:</span> {selectedMessage.email}</div>
               <div><span className="font-semibold text-gray-700">Phone:</span> {selectedMessage.phone || "-"}</div>
-              <div><span className="font-semibold text-gray-700">Subject:</span> {selectedMessage.subject || "-"}</div>
-              <div><span className="font-semibold text-gray-700">Date:</span> {selectedMessage.date ? new Date(selectedMessage.date).toLocaleString() : "-"}</div>
               <div><span className="font-semibold text-gray-700">Message:</span> <div className="mt-2 p-3 bg-gray-100 rounded">{selectedMessage.message}</div></div>
             </div>
           </div>
