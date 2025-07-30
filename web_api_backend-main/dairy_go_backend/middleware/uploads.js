@@ -26,5 +26,5 @@ const upload = multer({
     limits: { fileSize: maxSize },
 });
 
-// ✅ Export multer instance properly
+//  Export multer instance properly
 module.exports = upload;
