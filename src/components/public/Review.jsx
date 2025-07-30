@@ -11,13 +11,13 @@ const Review = () => {
   const [reviews, setReviews] = useState([
     {
       id: 1,
-      name: "Aarav Sharma",
+      name: "Samman Basnet",
       rating: 5,
       comment: "Amazing experience! Product and taste was good.",
     },
     {
       id: 2,
-      name: "Sita Rana",
+      name: "Nirajan Bhattarai",
       rating: 4.5,
       comment: "Great service and well-organized product. Highly recommended!",
     },
