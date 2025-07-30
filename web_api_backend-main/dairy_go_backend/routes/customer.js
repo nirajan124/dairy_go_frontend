@@ -20,7 +20,8 @@ router.post("/login", login);
 // Restrict these routes to logged-in users
 router.get("/getAllCustomers", protect, authorize("admin"), getCustomers);
 router.get("/getCustomer/:id", protect, authorize("admin", "customer"), getCustomer);
-
+router.put("/updateCustomer/:id", protect, authorize("admin", "customer"), upload.single("profilePicture"), updateCustomer);
+router.post("/uploadImage", protect, authorize("admin", "customer"), upload.single("profilePicture"), uploadImage);
 
 // Add DELETE route for admin to delete a customer
 router.delete("/deleteCustomer/:id", protect, authorize("admin"), deleteCustomer);
