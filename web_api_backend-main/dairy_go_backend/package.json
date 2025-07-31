@@ -1,7 +1,7 @@
 {
-  "name": "travel_website_backend",
+  "name": "dairy_go_backend",
   "version": "1.0.0",
-  "description": "",
+  "description": "Dairy Go E-commerce Backend API",
   "main": "server.js",
   "scripts": {
     "start": "cross-env NODE_ENV=development nodemon server.js",

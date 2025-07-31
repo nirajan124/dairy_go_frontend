@@ -17,7 +17,7 @@ const ProductDetail = () => {
   useEffect(() => {
     const fetchProductDetails = async () => {
       try {
-        const res = await axios.get(`/api/v1/products/${id}`);
+        const res = await axios.get(`http://localhost:3001/api/v1/products/${id}`);
         setProductData(res.data);
       } catch (err) {
         setError("Failed to load product details.");
@@ -27,6 +27,33 @@ const ProductDetail = () => {
     };
     fetchProductDetails();
   }, [id]);
+
+  const handleAddToWishlist = async () => {
+    if (!token) {
+      navigate('/login');
+      return;
+    }
+
+    try {
+      const response = await axios.post(
+        'http://localhost:3001/api/v1/wishlist/add',
+        { productId: id },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      if (response.data.success) {
+        setIsFavorite(true);
+        alert('Added to wishlist!');
+      }
+    } catch (error) {
+      if (error.response?.data?.message === "Product already in wishlist") {
+        setIsFavorite(true);
+        alert('Product is already in your wishlist!');
+      } else {
+        alert('Failed to add to wishlist. Please try again.');
+      }
+    }
+  };
 
   if (loading) return <div className="text-center py-20"><div className="dairy-spinner mx-auto" data-testid="dairy-spinner"></div></div>;
   if (error) return <div className="text-center py-20 text-red-500">{error}</div>;
@@ -99,9 +126,16 @@ const ProductDetail = () => {
                 {/* Order & Wishlist Section */}
                 <div className="mt-10 flex justify-between items-center">
                   {/* Wishlist Button */}
-                  <button className="flex items-center text-lg font-semibold text-gray-800 transition duration-300 hover:text-red-600">
-                    <FaHeart className="mr-2 text-2xl text-gray-400" />
-                    Add to Wishlist
+                  <button 
+                    onClick={handleAddToWishlist}
+                    className={`flex items-center text-lg font-semibold transition duration-300 ${
+                      isFavorite 
+                        ? 'text-red-600' 
+                        : 'text-gray-800 hover:text-red-600'
+                    }`}
+                  >
+                    <FaHeart className={`mr-2 text-2xl ${isFavorite ? 'text-red-600' : 'text-gray-400'}`} />
+                    {isFavorite ? 'Added to Wishlist' : 'Add to Wishlist'}
                   </button>
 
                   {/* Order Button */}

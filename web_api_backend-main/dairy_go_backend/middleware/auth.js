@@ -2,7 +2,7 @@ const jwt = require("jsonwebtoken");
 const asyncHandler = require("./async");
 const Customer = require("../models/Customer");
 const Credential = require("../models/Credential"); // Add this
-const SECRET_KEY = "d2f78ec5c4eb64c0bfe582ae6228a6059806a082724c9193836754dd3b8f14c4"; // Use same as AuthController
+const SECRET_KEY = "this_is_my_secret"; // Use same as config.env
 
 // Protect routes (Authentication Middleware)
 exports.protect = asyncHandler(async (req, res, next) => {
