@@ -99,7 +99,9 @@ const Reviews = () => {
               <tr key={review._id} className="border-b hover:bg-gray-100">
                 <td className="px-6 py-4 text-sm text-gray-700">{review.customerId?.fname || review.customerId?.name || "Unknown"}</td>
                 <td className="px-6 py-4 text-sm text-gray-700">{review.customerId?.email || "Unknown"}</td>
-                <td className="px-6 py-4 text-sm text-gray-700">{review.packageId?.name || review.packageId?.title || "Unknown"}</td>
+                <td className="px-6 py-4 text-sm text-gray-700">
+                  {review.packageId?.name || review.packageId?.title || review.name || "Unknown"}
+                </td>
                 <td className="px-6 py-4 text-sm text-gray-700">
                   {Array.from({ length: Number(review.rating) }, (_, index) => (
                     <span key={index} className="text-yellow-500">&#9733;</span>

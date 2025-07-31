@@ -21,6 +21,11 @@ const save = async (req, res) => {
             customerId: req.user.id // From auth middleware
         };
         
+        // If packageId is null or empty, remove it from the data
+        if (!reviewData.packageId) {
+            delete reviewData.packageId;
+        }
+        
         console.log("Saving review with data:", reviewData);
         const reviews = new Review(reviewData);
         await reviews.save();
