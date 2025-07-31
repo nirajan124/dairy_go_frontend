@@ -1,31 +1,108 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { FaBoxOpen, FaClipboardList, FaDollarSign, FaExclamationTriangle, FaUserPlus, FaUsers } from 'react-icons/fa';
 import { Area, AreaChart, CartesianGrid, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
+import axios from "axios";
 
 const Dashboard = () => {
-  // Mock Data for charts and tables
-  const revenueData = [
-    { month: 'Jan', revenue: 4000 }, { month: 'Feb', revenue: 3000 },
-    { month: 'Mar', revenue: 5000 }, { month: 'Apr', revenue: 4500 },
-    { month: 'May', revenue: 6000 }, { month: 'Jun', revenue: 5500 },
-  ];
+  const [dashboardData, setDashboardData] = useState({
+    orders: [],
+    products: [],
+    revenueData: [],
+    categoryData: [],
+    stats: {
+      totalRevenue: 0,
+      totalOrders: 0,
+      totalProducts: 0,
+      newCustomers: 0
+    }
+  });
+  const [loading, setLoading] = useState(true);
 
-  const categoryData = [
-    { name: 'Milk', value: 400 }, { name: 'Cheese', value: 300 },
-    { name: 'Yogurt', value: 200 }, { name: 'Butter', value: 100 },
-  ];
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      try {
+        // Fetch orders
+        const ordersRes = await axios.get("http://localhost:3001/api/v1/orders");
+        const orders = ordersRes.data;
 
-  const lowStockProducts = [
-    { id: 1, name: "Organic Greek Yogurt", stock: 8 },
-    { id: 2, name: "Fresh Butter", stock: 5 },
-    { id: 3, name: "Himalayan Pink Salt Lassi", stock: 12 },
-  ];
+        // Fetch products
+        const productsRes = await axios.get("http://localhost:3001/api/v1/products");
+        const products = productsRes.data;
 
-  const recentOrders = [
-    { id: "ORD-001", customer: "Ram Kumar", product: "Fresh Whole Milk", date: "2024-08-15", status: "Confirmed", amount: "Rs. 450" },
-    { id: "ORD-002", customer: "Sunita Devi", product: "Organic Greek Yogurt", date: "2024-08-14", status: "Pending", amount: "Rs. 150" },
-    { id: "ORD-003", customer: "Amit Singh", product: "Aged Cheddar Cheese", date: "2024-08-13", status: "Canceled", amount: "Rs. 500" },
-  ];
+        // Calculate statistics
+        const totalRevenue = orders.reduce((sum, order) => {
+          return sum + (order.packageId?.price * order.quantity || 0);
+        }, 0);
+
+        const confirmedOrders = orders.filter(order => order.status === "confirmed");
+        const pendingOrders = orders.filter(order => order.status === "pending");
+
+        // Generate revenue data (last 6 months)
+        const revenueData = [];
+        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
+        months.forEach((month, index) => {
+          const monthOrders = orders.filter(order => {
+            const orderDate = new Date(order.createdAt);
+            return orderDate.getMonth() === index;
+          });
+          const monthRevenue = monthOrders.reduce((sum, order) => {
+            return sum + (order.packageId?.price * order.quantity || 0);
+          }, 0);
+          revenueData.push({ month, revenue: monthRevenue });
+        });
+
+        // Generate category data
+        const categoryData = [];
+        const categories = {};
+        products.forEach(product => {
+          const category = product.category || 'Other';
+          categories[category] = (categories[category] || 0) + 1;
+        });
+        Object.entries(categories).forEach(([name, value]) => {
+          categoryData.push({ name, value });
+        });
+
+        // Get recent orders (last 5)
+        const recentOrders = orders.slice(0, 5).map(order => ({
+          id: order._id,
+          customer: order.customerId?.fname || order.fullName || "Guest",
+          product: order.packageId?.name || "Product",
+          date: new Date(order.createdAt).toLocaleDateString(),
+          status: order.status,
+          amount: `₹${(order.packageId?.price * order.quantity) || 0}`
+        }));
+
+        setDashboardData({
+          orders,
+          products,
+          revenueData,
+          categoryData,
+          recentOrders,
+          stats: {
+            totalRevenue,
+            totalOrders: orders.length,
+            totalProducts: products.length,
+            newCustomers: orders.filter(order => {
+              const orderDate = new Date(order.createdAt);
+              const now = new Date();
+              const diffDays = Math.ceil((now - orderDate) / (1000 * 60 * 60 * 24));
+              return diffDays <= 7;
+            }).length
+          }
+        });
+      } catch (error) {
+        console.error("Error fetching dashboard data:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDashboardData();
+    
+    // Refresh dashboard data every 30 seconds
+    const interval = setInterval(fetchDashboardData, 30000);
+    return () => clearInterval(interval);
+  }, []);
 
   const getStatusPill = (status) => {
     switch (status.toLowerCase()) {
@@ -36,6 +113,16 @@ const Dashboard = () => {
     }
   };
 
+  if (loading) {
+    return (
+      <div className="p-4 md:p-6 lg:p-8 bg-gray-100 min-h-screen">
+        <div className="text-center py-8">
+          <p className="text-gray-600">Loading dashboard data...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="p-4 md:p-6 lg:p-8 bg-gray-100 min-h-screen">
       {/* Page Title */}
@@ -43,10 +130,10 @@ const Dashboard = () => {
 
       {/* Stats Overview */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <StatCard title="Total Revenue" value="Rs. 1,45,000" icon={<FaDollarSign size={24} />} color="text-green-500" />
-        <StatCard title="Total Orders" value="3,450" icon={<FaClipboardList size={24} />} color="text-blue-500" />
-        <StatCard title="Total Products" value="58" icon={<FaBoxOpen size={24} />} color="text-purple-500" />
-        <StatCard title="New Customers" value="12" icon={<FaUserPlus size={24} />} color="text-yellow-500" />
+        <StatCard title="Total Revenue" value={`₹${dashboardData.stats.totalRevenue.toLocaleString()}`} icon={<FaDollarSign size={24} />} color="text-green-500" />
+        <StatCard title="Total Orders" value={dashboardData.stats.totalOrders.toString()} icon={<FaClipboardList size={24} />} color="text-blue-500" />
+        <StatCard title="Total Products" value={dashboardData.stats.totalProducts.toString()} icon={<FaBoxOpen size={24} />} color="text-purple-500" />
+        <StatCard title="New Customers" value={dashboardData.stats.newCustomers.toString()} icon={<FaUserPlus size={24} />} color="text-yellow-500" />
       </div>
 
       {/* Charts Section */}
@@ -55,7 +142,7 @@ const Dashboard = () => {
         <div className="lg:col-span-3 bg-white p-6 rounded-lg shadow-md hover:shadow-xl transition-shadow">
           <h3 className="text-xl font-semibold mb-4 text-gray-800">Monthly Revenue</h3>
           <ResponsiveContainer width="100%" height={300}>
-            <AreaChart data={revenueData}>
+            <AreaChart data={dashboardData.revenueData}>
               <defs>
                 <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="5%" stopColor="#8884d8" stopOpacity={0.8}/>
@@ -76,7 +163,7 @@ const Dashboard = () => {
           <h3 className="text-xl font-semibold mb-4 text-gray-800">Product Categories</h3>
           <ResponsiveContainer width="100%" height={300}>
             <PieChart>
-              <Pie data={categoryData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={100} fill="#8884d8" label />
+              <Pie data={dashboardData.categoryData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={100} fill="#8884d8" label />
               <Tooltip />
             </PieChart>
           </ResponsiveContainer>
@@ -99,7 +186,7 @@ const Dashboard = () => {
                 </tr>
               </thead>
               <tbody>
-                {recentOrders.map((order) => (
+                {dashboardData.recentOrders.map((order) => (
                   <tr key={order.id} className="border-b hover:bg-gray-50">
                     <td className="py-3 px-4 text-sm font-medium text-gray-700">{order.id}</td>
                     <td className="py-3 px-4 text-sm text-gray-600">{order.customer}</td>
@@ -116,21 +203,25 @@ const Dashboard = () => {
           </div>
         </div>
 
-        {/* Low Stock Alerts */}
+        {/* Recent Orders Summary */}
         <div className="bg-white shadow-md rounded-lg p-6">
           <h3 className="text-xl font-semibold mb-4 text-gray-800 flex items-center">
-            <FaExclamationTriangle className="mr-3 text-red-500" /> Low Stock Alerts
+            <FaClipboardList className="mr-3 text-blue-500" /> Order Summary
           </h3>
-          <ul className="space-y-4">
-            {lowStockProducts.map((product) => (
-              <li key={product.id} className="flex items-center justify-between p-2 rounded-lg hover:bg-red-50">
-                <div>
-                  <p className="font-semibold text-gray-800">{product.name}</p>
-                </div>
-                <span className="text-sm font-bold text-red-600">{product.stock} left</span>
-              </li>
-            ))}
-          </ul>
+          <div className="space-y-4">
+            <div className="flex justify-between items-center p-3 bg-red-50 rounded-lg">
+              <span className="font-semibold text-red-800">Cancelled Orders</span>
+              <span className="text-lg font-bold text-red-600">
+                {dashboardData.orders.filter(order => order.status === "cancelled").length}
+              </span>
+            </div>
+            <div className="flex justify-between items-center p-3 bg-blue-50 rounded-lg">
+              <span className="font-semibold text-blue-800">Total Orders</span>
+              <span className="text-lg font-bold text-blue-600">
+                {dashboardData.orders.length}
+              </span>
+            </div>
+          </div>
         </div>
       </div>
     </div>

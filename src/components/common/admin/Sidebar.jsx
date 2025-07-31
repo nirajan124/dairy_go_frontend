@@ -75,8 +75,7 @@ const Sidebar = () => {
           </button>
           {!isCollapsed && openMenus.orders && (
             <div className="ml-6 space-y-1 mt-1">
-              <Link to="/admin/pending" className="block p-2 rounded hover:bg-gray-700">Pending</Link>
-              <Link to="/admin/confirmed" className="block p-2 rounded hover:bg-gray-700">Confirmed</Link>
+              <Link to="/admin/cancelled" className="block p-2 rounded hover:bg-gray-700">Cancelled</Link>
             </div>
           )}
         </div>
@@ -102,7 +101,10 @@ const Sidebar = () => {
       </nav>
 
       <div className="pt-4 border-t border-gray-700">
-        <button onClick={handleLogout} className="flex items-center w-full gap-3 p-2 rounded-lg hover:bg-red-800">
+        <button 
+          onClick={handleLogout} 
+          className="flex items-center w-full gap-3 p-2 rounded-lg hover:bg-red-800 bg-red-700 text-white font-semibold"
+        >
           <LogOut size={20} />
           {!isCollapsed && <span>Logout</span>}
         </button>

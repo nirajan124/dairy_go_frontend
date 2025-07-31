@@ -263,11 +263,11 @@ const Review = () => {
           // For real products from database
           await axios.post("http://localhost:3001/api/v1/reviews", {
             rating: newReview.rating.toString(),
-            comment: newReview.comment,
+          comment: newReview.comment,
             packageId: newReview.packageId
           }, {
             headers: { Authorization: `Bearer ${token}` }
-          });
+        });
         }
         
         alert("Review submitted! Awaiting admin approval.");
@@ -277,7 +277,7 @@ const Review = () => {
         if (err.response?.data?.error) {
           alert(`Failed to submit review: ${err.response.data.error}`);
         } else {
-          alert("Failed to submit review. Please try again.");
+        alert("Failed to submit review. Please try again.");
         }
       }
     } else {
@@ -309,21 +309,21 @@ const Review = () => {
                 <p className="text-sm text-gray-600 mb-2">
                   {review.packageId?.name || "Product"}
                 </p>
-                <div className="flex items-center my-2">
-                  {Array.from({ length: 5 }, (_, index) => {
+              <div className="flex items-center my-2">
+                {Array.from({ length: 5 }, (_, index) => {
                     const rating = parseInt(review.rating);
                     if (index + 1 <= rating) {
-                      return <FaStar key={index} className="text-yellow-500 text-lg" />;
-                    } else {
-                      return <FaRegStar key={index} className="text-gray-400 text-lg" />;
-                    }
-                  })}
-                </div>
-                <p className="text-gray-700">{review.comment}</p>
+                    return <FaStar key={index} className="text-yellow-500 text-lg" />;
+                  } else {
+                    return <FaRegStar key={index} className="text-gray-400 text-lg" />;
+                  }
+                })}
+              </div>
+              <p className="text-gray-700">{review.comment}</p>
                 <p className="text-xs text-gray-500 mt-2">
                   {new Date(review.date).toLocaleDateString()}
                 </p>
-              </div>
+            </div>
             ))
           )}
         </div>

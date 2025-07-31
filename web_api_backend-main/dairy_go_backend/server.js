@@ -31,7 +31,7 @@ const contactRoutes = require("./routes/ContactRoute");
 const product = require("./routes/ProductRoute");
 const wishlist = require("./routes/WishlistRoute");
 const khaltiRoutes = require("./routes/KhaltiRoute");
-const booking = require("./routes/BookingRoute");
+const order = require("./routes/OrderRoute");
 const reviewRoutes = require("./routes/ReviewRoute");
 
 // Body parser
@@ -77,7 +77,7 @@ app.use("/api/v1/contact", contactRoutes);
 app.use("/api/v1/products", product);
 app.use("/api/v1/wishlist", wishlist);
 app.use("/api/khalti", khaltiRoutes);
-app.use("/api/v1/bookings", booking);
+app.use("/api/v1/orders", order);
 app.use("/api/v1/reviews", reviewRoutes);
 
 

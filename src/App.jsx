@@ -24,8 +24,7 @@ const Products = lazy(() => import("./components/public/Products"));
 const Dashboard = lazy(() => import("./components/private/dashboard/Dashboard"));
 const AddProduct = lazy(() => import("./components/private/products/AddProduct"));
 const ManageProducts = lazy(() => import("./components/private/products/ManageProducts"));
-const PendingOrders = lazy(() => import("./components/private/orders/PendingOrders"));
-const ConfirmedOrders = lazy(() => import("./components/private/orders/ConfirmedOrders"));
+const CancelledOrders = lazy(() => import("./components/private/orders/Cancelled"));
 const Payments = lazy(() => import("./components/private/payments/Payments"));
 const Customers = lazy(() => import("./components/private/users/Users"));
 const CustomerReviews = lazy(() => import("./components/private/reviews/Reviews"));
@@ -109,8 +108,7 @@ function App() {
         { path: "dashboard", element: <Suspense><Dashboard /></Suspense> },
         { path: "addproducts", element: <Suspense><AddProduct /></Suspense> },
         { path: "manageproducts", element: <Suspense><ManageProducts /></Suspense> },
-        { path: "pending", element: <Suspense><PendingOrders /></Suspense> },
-        { path: "confirmed", element: <Suspense><ConfirmedOrders /></Suspense> },
+        { path: "cancelled", element: <Suspense><CancelledOrders /></Suspense> },
         { path: "payments", element: <Suspense><Payments /></Suspense> },
         { path: "customers", element: <Suspense><Customers /></Suspense> },
         { path: "reviews", element: <Suspense><CustomerReviews /></Suspense> },

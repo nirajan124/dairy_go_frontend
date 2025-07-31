@@ -1,5 +1,4 @@
 import axios from "axios";
-import KhaltiCheckout from "khalti-checkout-web";
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import Footer from "../../components/common/customer/Footer";
@@ -13,7 +12,10 @@ const Checkout = () => {
     email: "",
     phone: "",
     quantity: 1,
-    paymentMethod: "khalti",
+    paymentMethod: "credit-card",
+    cardNumber: "",
+    cardExpiry: "",
+    cardCvv: "",
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -21,7 +23,7 @@ const Checkout = () => {
   useEffect(() => {
     const fetchPackageDetails = async () => {
       try {
-        const res = await axios.get(`/api/v1/products/${id}`);
+        const res = await axios.get(`http://localhost:3001/api/v1/products/${id}`);
         setPackageData(res.data);
       } catch (err) {
         setError("Failed to load product details. Please try again.");
@@ -37,52 +39,121 @@ const Checkout = () => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  // Khalti Payment Configuration
-  const khaltiConfig = {
-    publicKey: "test_public_key_dc74e0fd57cb46cd93832aee0a390234",
-    productIdentity: packageData?._id,
-    productName: packageData?.name || "Dairy Product",
-    productUrl: `http://localhost:5173/products/${packageData?._id}`,
-    eventHandler: {
-      onSuccess(payload) {
-        console.log("Payment Success:", payload);
+  const handleCardPayment = async () => {
+    if (!packageData) return;
+    
+    // Validate form data
+    if (!formData.fullName || !formData.email || !formData.phone) {
+      alert("Please fill in all required fields.");
+      return;
+    }
 
-        // Save booking details after payment success
-        axios
-          .post("http://localhost:3000/api/v1/bookings", {
+    // Validate card details
+    if (!formData.cardNumber || !formData.cardExpiry || !formData.cardCvv) {
+      alert("Please fill in all card details.");
+      return;
+    }
+
+    // Simple card validation
+    if (formData.cardNumber.length < 13 || formData.cardNumber.length > 19) {
+      alert("Please enter a valid card number.");
+      return;
+    }
+
+    if (formData.cardCvv.length < 3 || formData.cardCvv.length > 4) {
+      alert("Please enter a valid CVV.");
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem("token");
+      const orderData = {
             packageId: id,
             fullName: formData.fullName,
             email: formData.email,
             phone: formData.phone,
-            tickets: formData.quantity,
-            pickupLocation: "", // No pickup location for online payment
-            paymentMethod: "khalti",
-            paymentId: payload.idx, // Save Khalti transaction ID
-          })
-          .then(() => {
-            alert("Booking Successful! 🚀");
-          })
-          .catch(() => {
-            alert("Booking saved failed, but payment was successful.");
-          });
-      },
-      onError(error) {
-        console.log("Payment Error:", error);
-        alert("Payment Failed. Please try again.");
-      },
-      onClose() {
-        console.log("Khalti popup closed.");
-      },
-    },
-    paymentPreference: ["KHALTI"],
+        quantity: formData.quantity,
+        pickupLocation: "",
+        paymentMethod: "credit-card",
+        paymentId: `CARD_${Date.now()}` // Generate a unique payment ID
+      };
+
+      if (token) {
+        try {
+          const decodedToken = JSON.parse(atob(token.split(".")[1]));
+          orderData.customerId = decodedToken.id;
+        } catch (error) {
+          console.error("Error decoding token:", error);
+        }
+      }
+
+      const response = await axios.post("http://localhost:3001/api/v1/orders", orderData, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      console.log("Order created successfully:", response.data);
+      alert("Order placed successfully with card payment! 🚀");
+      // Reset form
+      setFormData({
+        fullName: "",
+        email: "",
+        phone: "",
+        quantity: 1,
+        paymentMethod: "credit-card",
+        cardNumber: "",
+        cardExpiry: "",
+        cardCvv: "",
+      });
+    } catch (error) {
+      console.error("Error creating order:", error);
+      alert("Failed to place order. Please try again.");
+    }
   };
 
-  const khaltiCheckout = new KhaltiCheckout(khaltiConfig);
+  const handleCashOnDelivery = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const orderData = {
+        packageId: id,
+        fullName: formData.fullName,
+        email: formData.email,
+        phone: formData.phone,
+        quantity: formData.quantity,
+        pickupLocation: "",
+        paymentMethod: "cash_on_delivery",
+        paymentId: null
+      };
 
-  const handlePayment = () => {
-    if (!packageData) return;
-    const totalAmount = packageData.price * formData.quantity * 100; // Convert to paisa
-    khaltiCheckout.show({ amount: totalAmount });
+      if (token) {
+        try {
+          const decodedToken = JSON.parse(atob(token.split(".")[1]));
+          orderData.customerId = decodedToken.id;
+        } catch (error) {
+          console.error("Error decoding token:", error);
+        }
+      }
+
+      const response = await axios.post("http://localhost:3001/api/v1/orders", orderData, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      console.log("Order created successfully:", response.data);
+      alert("Order placed successfully! You can pay on delivery.");
+      // Reset form
+      setFormData({
+        fullName: "",
+        email: "",
+        phone: "",
+        quantity: 1,
+        paymentMethod: "credit-card",
+        cardNumber: "",
+        cardExpiry: "",
+        cardCvv: "",
+      });
+    } catch (error) {
+      console.error("Error creating order:", error);
+      alert("Failed to place order. Please try again.");
+    }
   };
 
   if (loading) return <p className="text-center py-10 text-lg">Loading checkout details...</p>;
@@ -166,14 +237,87 @@ const Checkout = () => {
                   required
                 />
               </div>
-              {/* Payment Button */}
+
+              {/* Payment Method Selection */}
+              <div className="mt-4">
+                <label className="block text-gray-800 font-semibold mb-2">Payment Method</label>
+                <select
+                  name="paymentMethod"
+                  value={formData.paymentMethod}
+                  onChange={handleChange}
+                  className="w-full px-4 py-3 border rounded-md focus:ring-2 focus:ring-red-400"
+                  required
+                >
+                  <option value="credit-card">Credit Card</option>
+                  <option value="debit-card">Debit Card</option>
+                  <option value="cash_on_delivery">Cash on Delivery</option>
+                </select>
+              </div>
+
+              {/* Card Details (shown only when card payment is selected) */}
+              {formData.paymentMethod.includes('card') && (
+                <div className="space-y-4 mt-4">
+                  <div>
+                    <label className="block text-gray-800 font-semibold mb-2">Card Number</label>
+                    <input
+                      type="text"
+                      name="cardNumber"
+                      placeholder="1234 5678 9012 3456"
+                      value={formData.cardNumber}
+                      onChange={handleChange}
+                      className="w-full px-4 py-3 border rounded-md focus:ring-2 focus:ring-red-400"
+                      maxLength="19"
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-gray-800 font-semibold mb-2">Expiry Date</label>
+                      <input
+                        type="text"
+                        name="cardExpiry"
+                        placeholder="MM/YY"
+                        value={formData.cardExpiry}
+                        onChange={handleChange}
+                        className="w-full px-4 py-3 border rounded-md focus:ring-2 focus:ring-red-400"
+                        maxLength="5"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-gray-800 font-semibold mb-2">CVV</label>
+                      <input
+                        type="password"
+                        name="cardCvv"
+                        placeholder="123"
+                        value={formData.cardCvv}
+                        onChange={handleChange}
+                        className="w-full px-4 py-3 border rounded-md focus:ring-2 focus:ring-red-400"
+                        maxLength="4"
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Payment Buttons */}
+              <div className="space-y-3 mt-6">
+                {formData.paymentMethod.includes('card') ? (
               <button
                 type="button"
-                onClick={handlePayment}
+                    onClick={handleCardPayment}
                 className="w-full bg-red-800 text-white py-3 rounded-lg text-lg hover:bg-red-700 transition duration-300"
               >
-                Pay with Khalti
+                    Pay with Card
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={handleCashOnDelivery}
+                    className="w-full bg-gray-600 text-white py-3 rounded-lg text-lg hover:bg-gray-500 transition duration-300"
+                  >
+                    Cash on Delivery
               </button>
+                )}
+              </div>
             </form>
           </div>
         </div>

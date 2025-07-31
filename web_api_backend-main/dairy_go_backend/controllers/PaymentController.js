@@ -1,4 +1,4 @@
-const Payment = require('../model/Payment')
+const Payment = require('../models/Payment')
 const findAll = async (req, res) => {
     try {
         const payments = await Payment.find().populate(["bookingId"]);
