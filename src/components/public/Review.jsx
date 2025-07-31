@@ -8,25 +8,12 @@ import axios from "axios";
 const Review = () => {
   const [products, setProducts] = useState([]);
 
-  const [reviews, setReviews] = useState([
-    {
-      id: 1,
-      name: "Samman Basnet",
-      rating: 5,
-      comment: "Amazing experience! Product and taste was good.",
-    },
-    {
-      id: 2,
-      name: "Nirajan Bhattarai",
-      rating: 4.5,
-      comment: "Great service and well-organized product. Highly recommended!",
-    },
-  ]);
+  const [reviews, setReviews] = useState([]);
 
   const [newReview, setNewReview] = useState({
-    name: "",
     rating: 0,
     comment: "",
+    packageId: "",
   });
 
   const placeholderProducts = [
@@ -44,34 +31,58 @@ const Review = () => {
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const res = await axios.get("/api/v1/products");
+        const res = await axios.get("http://localhost:3001/api/v1/products");
         if (Array.isArray(res.data) && res.data.length > 0) {
           setProducts(res.data);
         } else {
           setProducts(placeholderProducts);
         }
       } catch (err) {
+        console.error("Error fetching products:", err);
         setProducts(placeholderProducts);
       }
     };
+
+    const fetchApprovedReviews = async () => {
+      try {
+        const res = await axios.get("http://localhost:3001/api/v1/reviews?status=Approved");
+        setReviews(res.data);
+      } catch (err) {
+        console.error("Error fetching reviews:", err);
+        setReviews([]);
+      }
+    };
+
     fetchProducts();
+    fetchApprovedReviews();
   }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (newReview.name && newReview.rating && newReview.comment && newReview.packageId) {
+    if (newReview.rating && newReview.comment && newReview.packageId) {
       try {
-        await axios.post("/api/v1/reviews", {
-          rating: newReview.rating,
+        const token = localStorage.getItem("token");
+        if (!token) {
+          alert("Please login to submit a review.");
+          return;
+        }
+
+        await axios.post("http://localhost:3001/api/v1/reviews", {
+          rating: newReview.rating.toString(),
           comment: newReview.comment,
-          packageId: newReview.packageId,
-          name: newReview.name
+          packageId: newReview.packageId
+        }, {
+          headers: { Authorization: `Bearer ${token}` }
         });
+        
         alert("Review submitted! Awaiting admin approval.");
-        setNewReview({ name: "", rating: 0, comment: "", packageId: "" });
+        setNewReview({ rating: 0, comment: "", packageId: "" });
       } catch (err) {
+        console.error("Error submitting review:", err);
         alert("Failed to submit review. Please try again.");
       }
+    } else {
+      alert("Please fill in all fields.");
     }
   };
 
@@ -81,28 +92,41 @@ const Review = () => {
       <div className="container mx-auto px-6 py-20">
         <h1 className="text-4xl font-bold text-center text-gray-800 mb-6">Customer Reviews</h1>
         <p className="text-lg text-center text-gray-600 mb-12">
-          See what our trekkers say about their experiences in Nepal!
+          See what our customers say about our fresh dairy products!
         </p>
 
         {/* Reviews Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {reviews.map((review) => (
-            <div key={review.id} className="bg-gray-100 p-6 rounded-lg shadow-md">
-              <h3 className="text-xl font-semibold text-gray-800">{review.name}</h3>
-              <div className="flex items-center my-2">
-                {Array.from({ length: 5 }, (_, index) => {
-                  if (index + 1 <= review.rating) {
-                    return <FaStar key={index} className="text-yellow-500 text-lg" />;
-                  } else if (index + 0.5 === review.rating) {
-                    return <FaStarHalfAlt key={index} className="text-yellow-500 text-lg" />;
-                  } else {
-                    return <FaRegStar key={index} className="text-gray-400 text-lg" />;
-                  }
-                })}
-              </div>
-              <p className="text-gray-700">{review.comment}</p>
+          {reviews.length === 0 ? (
+            <div className="col-span-full text-center py-8">
+              <p className="text-gray-600 text-lg">No approved reviews yet. Be the first to leave a review!</p>
             </div>
-          ))}
+          ) : (
+            reviews.map((review) => (
+              <div key={review._id} className="bg-gray-100 p-6 rounded-lg shadow-md">
+                <h3 className="text-xl font-semibold text-gray-800">
+                  {review.customerId?.fname || review.customerId?.name || review.name || "Anonymous"}
+                </h3>
+                <p className="text-sm text-gray-600 mb-2">
+                  {review.packageId?.name || "Product"}
+                </p>
+                <div className="flex items-center my-2">
+                  {Array.from({ length: 5 }, (_, index) => {
+                    const rating = parseInt(review.rating);
+                    if (index + 1 <= rating) {
+                      return <FaStar key={index} className="text-yellow-500 text-lg" />;
+                    } else {
+                      return <FaRegStar key={index} className="text-gray-400 text-lg" />;
+                    }
+                  })}
+                </div>
+                <p className="text-gray-700">{review.comment}</p>
+                <p className="text-xs text-gray-500 mt-2">
+                  {new Date(review.date).toLocaleDateString()}
+                </p>
+              </div>
+            ))
+          )}
         </div>
 
         {/* Review Form */}
@@ -110,7 +134,7 @@ const Review = () => {
           <h2 className="text-2xl font-semibold text-gray-800 mb-4">Leave a Review</h2>
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
-              <label className="block text-gray-800 font-semibold">Package</label>
+              <label className="block text-gray-800 font-semibold">Product</label>
               <select
                 name="packageId"
                 value={newReview.packageId}
@@ -118,7 +142,7 @@ const Review = () => {
                 className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-red-400"
                 required
               >
-                <option value="">Select a Package</option>
+                <option value="">Select a Product</option>
                 {products.map((product) => (
                   <option key={product._id} value={product._id}>
                     {product.name}

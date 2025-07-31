@@ -2,11 +2,11 @@ const mongoose = require("mongoose")
 const reviewSchema = new mongoose.Schema({
     customerId: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "customers"
+        ref: "Customer"
     },
     packageId: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "packages"
+        ref: "Product"
     },
     rating: {
         type: String,

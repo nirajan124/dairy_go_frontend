@@ -7,15 +7,23 @@ const statusOptions = ["All", "Pending", "Approved", "Rejected"];
 const Reviews = () => {
   const [reviews, setReviews] = useState([]);
   const [status, setStatus] = useState("All");
+  const [loading, setLoading] = useState(true);
 
   const fetchReviews = async (status) => {
     try {
-      let url = "/api/v1/reviews";
+      setLoading(true);
+      let url = "http://localhost:3001/api/v1/reviews";
       if (status && status !== "All") url += `?status=${status}`;
+      console.log("Fetching reviews from:", url);
       const res = await axios.get(url);
-      setReviews(res.data);
+      console.log("Reviews API response:", res.data);
+      // Ensure reviews is always an array
+      setReviews(Array.isArray(res.data) ? res.data : []);
     } catch (err) {
+      console.error("Error fetching reviews:", err);
       setReviews([]);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -24,25 +32,56 @@ const Reviews = () => {
   }, [status]);
 
   const handleApprove = async (id) => {
-    await axios.put(`/api/v1/reviews/${id}/approve`);
-    fetchReviews(status);
+    try {
+      await axios.put(`http://localhost:3001/api/v1/reviews/${id}/approve`);
+      fetchReviews(status);
+    } catch (err) {
+      console.error("Error approving review:", err);
+      alert("Failed to approve review.");
+    }
   };
+  
   const handleReject = async (id) => {
-    await axios.put(`/api/v1/reviews/${id}/reject`);
-    fetchReviews(status);
+    try {
+      await axios.put(`http://localhost:3001/api/v1/reviews/${id}/reject`);
+      fetchReviews(status);
+    } catch (err) {
+      console.error("Error rejecting review:", err);
+      alert("Failed to reject review.");
+    }
   };
 
   return (
     <div className="space-y-6">
       <h2 className="text-2xl font-semibold">Customer Reviews</h2>
-      <div className="mb-4">
-        <label className="mr-2 font-medium">Filter by Status:</label>
-        <select value={status} onChange={e => setStatus(e.target.value)} className="border p-2 rounded">
-          {statusOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}
-        </select>
+      <div className="mb-4 flex items-center gap-4">
+        <div>
+          <label className="mr-2 font-medium">Filter by Status:</label>
+          <select value={status} onChange={e => setStatus(e.target.value)} className="border p-2 rounded">
+            {statusOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+          </select>
+        </div>
+        <button 
+          onClick={() => fetchReviews(status)}
+          className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+        >
+          Refresh
+        </button>
       </div>
-      <div className="overflow-x-auto">
-        <table className="min-w-full bg-white shadow-md rounded-lg">
+      
+      {loading ? (
+        <div className="text-center py-8">
+          <p className="text-gray-600">Loading reviews...</p>
+        </div>
+      ) : reviews.length === 0 ? (
+        <div className="text-center py-8">
+          <p className="text-gray-600">No reviews found.</p>
+          <p className="text-sm text-gray-500 mt-2">Current filter: {status}</p>
+          <p className="text-sm text-gray-500">Total reviews: {reviews.length}</p>
+        </div>
+      ) : (
+        <div className="overflow-x-auto">
+          <table className="min-w-full bg-white shadow-md rounded-lg">
           <thead>
             <tr className="bg-gray-100">
               <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">User</th>
@@ -101,7 +140,8 @@ const Reviews = () => {
             ))}
           </tbody>
         </table>
-      </div>
+        </div>
+      )}
     </div>
   );
 };

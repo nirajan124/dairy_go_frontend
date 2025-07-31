@@ -3,20 +3,32 @@ const findAll = async (req, res) => {
     try {
         const status = req.query.status;
         const filter = status ? { status } : {};
+        console.log("Finding reviews with filter:", filter);
         const reviews = await Review.find(filter).populate(["customerId", "packageId"]);
+        console.log("Found reviews:", reviews.length);
         res.status(200).json(reviews);
     } catch (e) {
-        res.json(e)
+        console.error("Error finding reviews:", e);
+        res.status(500).json({ error: e.message })
     }
 
 }
 const save = async (req, res) => {
     try {
-        const reviews = new Review(req.body);
+        // Add customer ID from authenticated user
+        const reviewData = {
+            ...req.body,
+            customerId: req.user.id // From auth middleware
+        };
+        
+        console.log("Saving review with data:", reviewData);
+        const reviews = new Review(reviewData);
         await reviews.save();
+        console.log("Review saved successfully:", reviews._id);
         res.status(201).json(reviews)
     } catch (e) {
-        res.json(e)
+        console.error("Error saving review:", e);
+        res.status(500).json({ error: e.message })
     }
 
 }
