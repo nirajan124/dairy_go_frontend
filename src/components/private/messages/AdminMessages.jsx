@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
+import { FaTrash } from "react-icons/fa";
 
 const AdminMessages = () => {
   const [messages, setMessages] = useState([]);
@@ -14,7 +15,7 @@ const AdminMessages = () => {
       setError("");
       try {
         const token = localStorage.getItem("token");
-        const res = await axios.get("/api/v1/contact", {
+        const res = await axios.get("http://localhost:3001/api/v1/contact", {
           headers: { Authorization: `Bearer ${token}` }
         });
         setMessages(res.data || []);
@@ -33,6 +34,23 @@ const AdminMessages = () => {
     if (filter === "Unread") return !msg.read;
     return true;
   });
+
+  const handleDelete = async (messageId) => {
+    if (!window.confirm("Are you sure you want to delete this message? This action cannot be undone.")) return;
+    try {
+      console.log("Deleting message with ID:", messageId);
+      const token = localStorage.getItem("token");
+      const response = await axios.delete(`http://localhost:3001/api/v1/contact/${messageId}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      console.log("Delete response:", response.data);
+      setMessages(messages.filter(msg => msg._id !== messageId));
+      alert("✅ Message deleted successfully.");
+    } catch (err) {
+      console.error("Error deleting message:", err);
+      alert(`❌ Failed to delete message: ${err.response?.data?.error || err.message}`);
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -73,25 +91,41 @@ const AdminMessages = () => {
                   <td className="px-6 py-4 text-sm text-gray-700">{msg.subject || "-"}</td>
                   <td className="px-6 py-4 text-sm text-gray-700">{msg.date ? new Date(msg.date).toLocaleString() : "-"}</td>
                   <td className="px-6 py-4 text-sm text-gray-700">
-                    <button className="text-blue-600 hover:underline" onClick={() => setSelectedMessage(msg)}>View</button>
-                    {!msg.read && (
-                      <button
-                        className="ml-3 text-green-600 hover:underline"
-                        onClick={async () => {
-                          try {
-                            const token = localStorage.getItem("token");
-                            await axios.patch(`/api/v1/contact/${msg._id}/read`, {}, {
-                              headers: { Authorization: `Bearer ${token}` }
-                            });
-                            setMessages(messages => messages.map(m => m._id === msg._id ? { ...m, read: true } : m));
-                          } catch (err) {
-                            alert("Failed to mark as read.");
-                          }
-                        }}
+                    <div className="flex space-x-2">
+                      <button 
+                        className="text-blue-600 hover:underline" 
+                        onClick={() => setSelectedMessage(msg)}
+                        title="View Message Details"
                       >
-                        Mark as Read
+                        View
                       </button>
-                    )}
+                      {!msg.read && (
+                        <button
+                          className="text-green-600 hover:underline"
+                          onClick={async () => {
+                            try {
+                              const token = localStorage.getItem("token");
+                              await axios.patch(`http://localhost:3001/api/v1/contact/${msg._id}/read`, {}, {
+                                headers: { Authorization: `Bearer ${token}` }
+                              });
+                              setMessages(messages => messages.map(m => m._id === msg._id ? { ...m, read: true } : m));
+                            } catch (err) {
+                              alert("Failed to mark as read.");
+                            }
+                          }}
+                          title="Mark as Read"
+                        >
+                          Mark as Read
+                        </button>
+                      )}
+                      <button
+                        className="text-red-500 hover:text-red-700"
+                        onClick={() => handleDelete(msg._id)}
+                        title="Delete Message"
+                      >
+                        <FaTrash />
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}

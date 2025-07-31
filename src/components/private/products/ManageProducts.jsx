@@ -283,7 +283,7 @@ const ManageProducts = () => {
         </div>
       )}
       {/* Add fade-in animation */}
-      <style jsx>{`
+      <style>{`
         .animate-fade-in {
           animation: fadeIn 0.5s;
         }

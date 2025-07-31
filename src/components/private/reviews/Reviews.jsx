@@ -51,6 +51,20 @@ const Reviews = () => {
     }
   };
 
+  const handleDelete = async (id) => {
+    if (!window.confirm("Are you sure you want to delete this review? This action cannot be undone.")) return;
+    try {
+      console.log("Deleting review with ID:", id);
+      const response = await axios.delete(`http://localhost:3001/api/v1/reviews/${id}`);
+      console.log("Delete response:", response.data);
+      alert("✅ Review deleted successfully.");
+      fetchReviews(status);
+    } catch (err) {
+      console.error("Error deleting review:", err);
+      alert(`❌ Failed to delete review: ${err.response?.data?.error || err.message}`);
+    }
+  };
+
   return (
     <div className="space-y-6">
       <h2 className="text-2xl font-semibold">Customer Reviews</h2>
@@ -121,22 +135,33 @@ const Reviews = () => {
                   </span>
                 </td>
                 <td className="px-6 py-4 text-sm text-gray-700">
-                  {review.status === "Pending" && (
-                    <>
-                      <button
-                        className="text-green-500 hover:text-green-700 mr-2"
-                        onClick={() => handleApprove(review._id)}
-                      >
-                        <FaCheck /> Approve
-                      </button>
-                      <button
-                        className="text-red-500 hover:text-red-700"
-                        onClick={() => handleReject(review._id)}
-                      >
-                        <FaTrash /> Reject
-                      </button>
-                    </>
-                  )}
+                  <div className="flex space-x-2">
+                    {review.status === "Pending" && (
+                      <>
+                        <button
+                          className="text-green-500 hover:text-green-700"
+                          onClick={() => handleApprove(review._id)}
+                          title="Approve Review"
+                        >
+                          <FaCheck /> Approve
+                        </button>
+                        <button
+                          className="text-red-500 hover:text-red-700"
+                          onClick={() => handleReject(review._id)}
+                          title="Reject Review"
+                        >
+                          <FaTrash /> Reject
+                        </button>
+                      </>
+                    )}
+                    <button
+                      className="text-red-500 hover:text-red-700"
+                      onClick={() => handleDelete(review._id)}
+                      title="Delete Review"
+                    >
+                      <FaTrash /> Delete
+                    </button>
+                  </div>
                 </td>
               </tr>
             ))}

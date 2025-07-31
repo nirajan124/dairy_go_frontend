@@ -4,6 +4,22 @@ const { protect, authorize } = require("../middleware/auth"); // Import RBAC Mid
 const path = require("path");
 const fs = require("fs");
 
+// @desc    Get current user info
+// @route   GET /api/v1/customers/getCurrentUser
+// @access  Private
+exports.getCurrentUser = asyncHandler(async (req, res, next) => {
+    const customer = await Customer.findById(req.user.id);
+    
+    if (!customer) {
+        return res.status(404).json({ message: "User not found" });
+    }
+
+    res.status(200).json({
+        success: true,
+        data: customer,
+    });
+});
+
 // @desc    Get all customers (Admin Only)
 // @route   GET /api/v1/customers
 // @access  Private (Admin)
@@ -135,21 +151,28 @@ exports.updateCustomer = asyncHandler(async (req, res, next) => {
 });
 
 // @desc    Delete Customer (Admin Only)
-// @route   DELETE /api/v1/customers/:id
+// @route   DELETE /api/v1/customers/deleteCustomer/:id
 // @access  Private (Admin Only)
 exports.deleteCustomer = asyncHandler(async (req, res, next) => {
+    console.log("Delete customer request for ID:", req.params.id);
+    console.log("Current user:", req.user);
+    
     const customer = await Customer.findById(req.params.id);
 
     if (!customer) {
+        console.log("Customer not found with ID:", req.params.id);
         return res.status(404).json({ message: "Customer not found" });
     }
 
     // Only allow admin to delete customer
     if (req.user.role !== "admin") {
+        console.log("Access denied - user role:", req.user.role);
         return res.status(403).json({ message: "Access denied." });
     }
 
-    await customer.remove();
+    // Use deleteOne() instead of remove() (deprecated)
+    await Customer.findByIdAndDelete(req.params.id);
+    console.log("Customer deleted successfully:", req.params.id);
     res.status(200).json({ success: true, message: "Customer deleted successfully" });
 });
 
@@ -165,6 +188,48 @@ exports.uploadImage = asyncHandler(async (req, res, next) => {
         success: true,
         message: "Image uploaded successfully",
         data: req.file.filename,
+    });
+});
+
+// @desc    Activate customer (Admin Only)
+// @route   PUT /api/v1/customers/activateCustomer/:id
+// @access  Private (Admin)
+exports.activateCustomer = asyncHandler(async (req, res, next) => {
+    const customer = await Customer.findById(req.params.id);
+
+    if (!customer) {
+        return res.status(404).json({ message: `Customer not found with id ${req.params.id}` });
+    }
+
+    customer.isActive = true;
+    customer.status = "Active";
+    await customer.save();
+
+    res.status(200).json({
+        success: true,
+        message: "Customer activated successfully",
+        data: customer,
+    });
+});
+
+// @desc    Deactivate customer (Admin Only)
+// @route   PUT /api/v1/customers/deactivateCustomer/:id
+// @access  Private (Admin)
+exports.deactivateCustomer = asyncHandler(async (req, res, next) => {
+    const customer = await Customer.findById(req.params.id);
+
+    if (!customer) {
+        return res.status(404).json({ message: `Customer not found with id ${req.params.id}` });
+    }
+
+    customer.isActive = false;
+    customer.status = "Inactive";
+    await customer.save();
+
+    res.status(200).json({
+        success: true,
+        message: "Customer deactivated successfully",
+        data: customer,
     });
 });
 

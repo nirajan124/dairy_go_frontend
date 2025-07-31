@@ -39,6 +39,15 @@ const customerSchema = new mongoose.Schema({
         type: String,
         enum: ["customer", "admin"], // Define roles
         default: "customer", // Default role for new users
+    },
+    isActive: {
+        type: Boolean,
+        default: true, // Default to active
+    },
+    status: {
+        type: String,
+        enum: ["Active", "Inactive"],
+        default: "Active", // Default to active
     }
 
 

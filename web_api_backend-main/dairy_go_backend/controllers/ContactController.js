@@ -37,4 +37,23 @@ exports.markAsRead = async (req, res) => {
   } catch (err) {
     res.status(500).json({ success: false, message: "Failed to mark as read." });
   }
+};
+
+// Delete a contact message (admin only)
+exports.deleteMessage = async (req, res) => {
+  try {
+    console.log("Deleting message with ID:", req.params.id);
+    const message = await ContactMessage.findByIdAndDelete(req.params.id);
+    
+    if (!message) {
+      console.log("Message not found with ID:", req.params.id);
+      return res.status(404).json({ success: false, message: "Message not found." });
+    }
+    
+    console.log("Message deleted successfully:", req.params.id);
+    res.status(200).json({ success: true, message: "Message deleted successfully." });
+  } catch (err) {
+    console.error("Error deleting message:", err);
+    res.status(500).json({ success: false, message: "Failed to delete message." });
+  }
 }; 

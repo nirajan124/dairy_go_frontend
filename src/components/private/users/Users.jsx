@@ -7,6 +7,7 @@ const Users = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [selectedUser, setSelectedUser] = useState(null);
+  const [currentUserId, setCurrentUserId] = useState(null);
 
   useEffect(() => {
     const fetchUsers = async () => {
@@ -14,7 +15,21 @@ const Users = () => {
       setError("");
       try {
         const token = localStorage.getItem("token");
-        const res = await axios.get("/api/v1/customers/getAllCustomers", {
+        
+        // Get current user info from token
+        if (token) {
+          try {
+            const currentUserRes = await axios.get("http://localhost:3001/api/v1/customers/getCurrentUser", {
+              headers: { Authorization: `Bearer ${token}` }
+            });
+            setCurrentUserId(currentUserRes.data.data?._id || currentUserRes.data._id);
+            console.log("Current user ID:", currentUserRes.data.data?._id || currentUserRes.data._id);
+          } catch (err) {
+            console.log("Could not get current user info:", err.message);
+          }
+        }
+        
+        const res = await axios.get("http://localhost:3001/api/v1/customers/getAllCustomers", {
           headers: { Authorization: `Bearer ${token}` }
         });
         setUsers(res.data.data || res.data || []);
@@ -32,17 +47,66 @@ const Users = () => {
 
   const closeModal = () => setSelectedUser(null);
 
+  const handleActivateUser = async (userId) => {
+    if (!window.confirm("Are you sure you want to activate this user?")) return;
+    try {
+      console.log("Activating user with ID:", userId);
+      const token = localStorage.getItem("token");
+      const response = await axios.put(`http://localhost:3001/api/v1/customers/activateCustomer/${userId}`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      console.log("Activate response:", response.data);
+      
+      // Update the user status in the local state
+      setUsers(users.map(user => 
+        user._id === userId 
+          ? { ...user, status: "Active", isActive: true }
+          : user
+      ));
+      alert("✅ User activated successfully.");
+    } catch (err) {
+      console.error("Error activating user:", err);
+      alert(`❌ Failed to activate user: ${err.response?.data?.error || err.message}`);
+    }
+  };
+
+  const handleDeactivateUser = async (userId) => {
+    if (!window.confirm("Are you sure you want to deactivate this user?")) return;
+    try {
+      console.log("Deactivating user with ID:", userId);
+      const token = localStorage.getItem("token");
+      const response = await axios.put(`http://localhost:3001/api/v1/customers/deactivateCustomer/${userId}`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      console.log("Deactivate response:", response.data);
+      
+      // Update the user status in the local state
+      setUsers(users.map(user => 
+        user._id === userId 
+          ? { ...user, status: "Inactive", isActive: false }
+          : user
+      ));
+      alert("✅ User deactivated successfully.");
+    } catch (err) {
+      console.error("Error deactivating user:", err);
+      alert(`❌ Failed to deactivate user: ${err.response?.data?.error || err.message}`);
+    }
+  };
+
   const handleDelete = async (userId) => {
     if (!window.confirm("Are you sure you want to delete this user? This action cannot be undone.")) return;
     try {
+      console.log("Deleting user with ID:", userId);
       const token = localStorage.getItem("token");
-      await axios.delete(`/api/v1/customers/deleteCustomer/${userId}`, {
+      const response = await axios.delete(`http://localhost:3001/api/v1/customers/deleteCustomer/${userId}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
+      console.log("Delete response:", response.data);
       setUsers(users.filter(u => u._id !== userId));
-      alert("User deleted successfully.");
+      alert("✅ User deleted successfully.");
     } catch (err) {
-      alert("Failed to delete user. Please try again.");
+      console.error("Error deleting user:", err);
+      alert(`❌ Failed to delete user: ${err.response?.data?.error || err.message}`);
     }
   };
 
@@ -72,29 +136,54 @@ const Users = () => {
                   <td className="px-6 py-4 text-sm text-gray-700">{user.email}</td>
                   <td className="px-6 py-4 text-sm text-gray-700">{user.role}</td>
                   <td className="px-6 py-4 text-sm text-gray-700">
-                    <span className={`px-2 py-1 rounded-full text-xs font-semibold ${user.status === "Active" ? "bg-red-100 text-red-800" : "bg-gray-100 text-gray-800"}`}>
-                      {user.status || (user.isActive ? "Active" : "Inactive")}
+                    <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
+                      user._id === currentUserId
+                        ? "bg-green-100 text-green-800" 
+                        : "bg-gray-100 text-gray-800"
+                    }`}>
+                      {user._id === currentUserId ? "Active (You)" : "Inactive"}
                     </span>
                   </td>
                   <td className="px-6 py-4 text-sm text-gray-700">
-                    <button className="text-blue-500 hover:text-blue-700 mr-2" onClick={() => setSelectedUser(user)}>
-                      View
-                    </button>
-                    {user.status === "Active" && (
-                      <button className="text-yellow-500 hover:text-yellow-700" onClick={() => alert(`Deactivate user ${user.fname || user.name}`)}>
-                        Deactivate
+                    <div className="flex space-x-2">
+                      <button 
+                        className="text-blue-500 hover:text-blue-700" 
+                        onClick={() => setSelectedUser(user)}
+                        title="View User Details"
+                      >
+                        View
                       </button>
-                    )}
-                    {user.status === "Inactive" && (
-                      <button className="text-green-500 hover:text-green-700" onClick={() => alert(`Activate user ${user.fname || user.name}`)}>
-                        Activate
-                      </button>
-                    )}
-                    {user.role === "customer" && (
-                      <button className="text-red-500 hover:text-red-700 ml-2" onClick={() => handleDelete(user._id)} title="Delete User">
-                        <FaTrash />
-                      </button>
-                    )}
+                      
+                      {user._id !== currentUserId && (
+                        user.status === "Active" || user.isActive ? (
+                          <button 
+                            className="text-yellow-500 hover:text-yellow-700" 
+                            onClick={() => handleDeactivateUser(user._id)}
+                            title="Deactivate User"
+                          >
+                            Deactivate
+                          </button>
+                        ) : (
+                          <button 
+                            className="text-green-500 hover:text-green-700" 
+                            onClick={() => handleActivateUser(user._id)}
+                            title="Activate User"
+                          >
+                            Activate
+                          </button>
+                        )
+                      )}
+                      
+                      {user.role === "customer" && user._id !== currentUserId && (
+                        <button 
+                          className="text-red-500 hover:text-red-700" 
+                          onClick={() => handleDelete(user._id)} 
+                          title="Delete User"
+                        >
+                          <FaTrash />
+                        </button>
+                      )}
+                    </div>
                   </td>
                 </tr>
               ))}
