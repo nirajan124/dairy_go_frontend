@@ -13,7 +13,8 @@ const {
     updateCustomer,
     deleteCustomer,
     activateCustomer,
-    deactivateCustomer
+    deactivateCustomer,
+    changePassword
 } = require("../controllers/customer");
 
 // Routes
@@ -25,6 +26,7 @@ router.get("/getCurrentUser", protect, getCurrentUser);
 router.get("/getAllCustomers", protect, authorize("admin"), getCustomers);
 router.get("/getCustomer/:id", protect, authorize("admin", "customer"), getCustomer);
 router.put("/updateCustomer/:id", protect, authorize("admin", "customer"), upload.single("profilePicture"), updateCustomer);
+router.put("/changePassword/:id", protect, authorize("admin", "customer"), changePassword);
 router.post("/uploadImage", protect, authorize("admin", "customer"), upload.single("profilePicture"), uploadImage);
 
 // Add DELETE route for admin to delete a customer

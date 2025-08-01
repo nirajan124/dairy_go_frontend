@@ -20,11 +20,13 @@ const Mybooking = lazy(() => import("./components/public/Mybooking"));
 const EditProfile = lazy(() => import("./components/public/Editprofile"));
 const ProductDetail = lazy(() => import("./components/public/ProductDetail"));
 const Products = lazy(() => import("./components/public/Products"));
+const AdminLogin = lazy(() => import("./components/public/AdminLogin"));
 
 const Dashboard = lazy(() => import("./components/private/dashboard/Dashboard"));
 const AddProduct = lazy(() => import("./components/private/products/AddProduct"));
 const ManageProducts = lazy(() => import("./components/private/products/ManageProducts"));
 const CancelledOrders = lazy(() => import("./components/private/orders/Cancelled"));
+const PendingOrders = lazy(() => import("./components/private/orders/Pending"));
 const Payments = lazy(() => import("./components/private/payments/Payments"));
 const Customers = lazy(() => import("./components/private/users/Users"));
 const CustomerReviews = lazy(() => import("./components/private/reviews/Reviews"));
@@ -46,6 +48,10 @@ function App() {
     {
       path: "/register",
       element: <Suspense><Register /></Suspense>,
+    },
+    {
+      path: "/admin-login",
+      element: <Suspense><AdminLogin /></Suspense>,
     },
     {
       path: "/checkout/:id",
@@ -105,12 +111,16 @@ function App() {
       path: "/admin",
       element: <Suspense><Layout /></Suspense>, // This layout can handle auth checks
       children: [
+        { path: "", element: <Suspense><Dashboard /></Suspense> }, // Default dashboard route
         { path: "dashboard", element: <Suspense><Dashboard /></Suspense> },
-        { path: "addproducts", element: <Suspense><AddProduct /></Suspense> },
+        { path: "addproduct", element: <Suspense><AddProduct /></Suspense> }, // Fixed path
+        { path: "addproducts", element: <Suspense><AddProduct /></Suspense> }, // Keep both for compatibility
         { path: "manageproducts", element: <Suspense><ManageProducts /></Suspense> },
         { path: "cancelled", element: <Suspense><CancelledOrders /></Suspense> },
+        { path: "pending", element: <Suspense><PendingOrders /></Suspense> },
         { path: "payments", element: <Suspense><Payments /></Suspense> },
-        { path: "customers", element: <Suspense><Customers /></Suspense> },
+        { path: "users", element: <Suspense><Customers /></Suspense> }, // Fixed path
+        { path: "customers", element: <Suspense><Customers /></Suspense> }, // Keep both for compatibility
         { path: "reviews", element: <Suspense><CustomerReviews /></Suspense> },
         { path: "profile", element: <Suspense><Profile /></Suspense> },
         { path: "settings", element: <Suspense><Settings /></Suspense> },

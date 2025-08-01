@@ -107,6 +107,30 @@ const cancelOrder = async (req, res) => {
   }
 };
 
+// Delete an order permanently
+const deleteOrder = async (req, res) => {
+  try {
+    console.log("=== DELETE ORDER REQUEST ===");
+    console.log("Order ID:", req.params.id);
+    console.log("Request body:", req.body);
+    console.log("Request headers:", req.headers);
+    
+    const deletedOrder = await Order.findByIdAndDelete(req.params.id);
+    
+    if (!deletedOrder) {
+      console.log("Order not found for ID:", req.params.id);
+      return res.status(404).json({ error: "Order not found" });
+    }
+    
+    console.log("Order deleted successfully:", deletedOrder._id);
+    console.log("=== END DELETE ORDER ===");
+    res.status(200).json({ message: "Order deleted successfully", order: deletedOrder });
+  } catch (error) {
+    console.error("Error deleting order:", error);
+    res.status(500).json({ error: "Failed to delete order" });
+  }
+};
+
 // Get orders by user ID
 const getOrdersByUserId = async (req, res) => {
   try {
@@ -139,6 +163,7 @@ module.exports = {
   getOrderById,
   confirmOrder,
   cancelOrder,
+  deleteOrder,
   getOrdersByUserId,
   testOrderRoutes,
 };

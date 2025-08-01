@@ -2,7 +2,7 @@ const jwt = require("jsonwebtoken");
 const asyncHandler = require("./async");
 const Customer = require("../models/Customer");
 const Credential = require("../models/Credential"); // Add this
-const SECRET_KEY = "this_is_my_secret"; // Use same as config.env
+const SECRET_KEY = process.env.JWT_SECRET || "this_is_my_secret"; // Use environment variable
 
 // Protect routes (Authentication Middleware)
 exports.protect = asyncHandler(async (req, res, next) => {
@@ -24,7 +24,7 @@ exports.protect = asyncHandler(async (req, res, next) => {
         let decoded;
         try {
             decoded = jwt.verify(token, process.env.JWT_SECRET);
-        req.user = await Customer.findById(decoded.id).select("-password");
+            req.user = await Customer.findById(decoded.id).select("-password");
         } catch (e) {
             // If fails, try as admin Credential
             decoded = jwt.verify(token, SECRET_KEY);

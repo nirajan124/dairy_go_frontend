@@ -1,44 +1,30 @@
 import React, { useEffect, useState } from "react";
+import { FaCheck, FaTimes, FaClock, FaUser, FaBox, FaCreditCard } from "react-icons/fa";
 import axios from "axios";
 
 const PendingOrders = () => {
   const [pendingOrders, setPendingOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [lastOrderCount, setLastOrderCount] = useState(0);
+  const [lastUpdate, setLastUpdate] = useState(new Date());
 
   useEffect(() => {
     const fetchPendingOrders = async () => {
       try {
-        console.log("Fetching pending orders...");
-        console.log("Making request to: http://localhost:3001/api/v1/orders");
         const res = await axios.get("http://localhost:3001/api/v1/orders");
-        console.log("All orders received:", res.data);
         const pending = res.data.filter(order => order.status === "pending");
-        console.log("Filtered pending orders:", pending);
         
         // Check if new orders arrived
         if (pending.length > lastOrderCount && lastOrderCount > 0) {
           const newOrders = pending.length - lastOrderCount;
-          alert(`🎉 ${newOrders} new pending order(s) received!`);
+          console.log(`🎉 ${newOrders} new pending order(s) received!`);
         }
         
         setPendingOrders(pending);
         setLastOrderCount(pending.length);
+        setLastUpdate(new Date());
       } catch (err) {
         console.error("Error fetching pending orders:", err);
-        console.error("Error details:", {
-          message: err.message,
-          status: err.response?.status,
-          statusText: err.response?.statusText,
-          url: err.config?.url
-        });
-        
-        if (err.response?.status === 404) {
-          console.error("404 Error - Endpoint not found. Check if backend server is running on port 3001");
-        } else if (err.code === "ERR_NETWORK") {
-          console.error("Network Error - Backend server might not be running");
-        }
-        
         setPendingOrders([]);
       } finally {
         setLoading(false);
@@ -53,7 +39,6 @@ const PendingOrders = () => {
     
     // Also refresh when window gains focus
     const handleFocus = () => {
-      console.log("Window focused, refreshing pending orders...");
       fetchPendingOrders();
     };
     
@@ -68,9 +53,7 @@ const PendingOrders = () => {
   const handleApprove = async (orderId) => {
     if (confirm("Are you sure you want to approve this order?")) {
       try {
-        console.log("Approving order:", orderId);
         const response = await axios.put(`http://localhost:3001/api/v1/orders/${orderId}/confirm`);
-        console.log("Approval response:", response.data);
         
         // Refresh the list immediately
         setLoading(true);
@@ -90,9 +73,7 @@ const PendingOrders = () => {
   const handleCancel = async (orderId) => {
     if (confirm("Are you sure you want to cancel this order?")) {
       try {
-        console.log("Cancelling order:", orderId);
         const response = await axios.put(`http://localhost:3001/api/v1/orders/${orderId}/cancel`);
-        console.log("Cancellation response:", response.data);
         
         // Refresh the list immediately
         setLoading(true);
@@ -110,137 +91,153 @@ const PendingOrders = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="p-6 space-y-6">
+      {/* Header with Real-time Indicator */}
       <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-semibold">Pending Orders</h2>
-        {loading && (
-          <div className="flex items-center text-blue-600">
-            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600 mr-2"></div>
-            <span className="text-sm">Refreshing...</span>
-          </div>
-        )}
+        <div>
+          <h2 className="text-3xl font-bold text-blue-800 dairy-heading">Pending Orders</h2>
+          <p className="text-gray-600 dairy-text">Last updated: {lastUpdate.toLocaleTimeString()}</p>
+        </div>
+        <div className="flex items-center space-x-2">
+          <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
+          <span className="text-sm text-green-600 font-medium">Live Data</span>
+        </div>
       </div>
       
-      {/* Debug Section */}
-      <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
-        <h3 className="text-lg font-semibold text-yellow-800 mb-2">Debug Information</h3>
-        <p className="text-sm text-yellow-700">
-          Total orders found: {pendingOrders.length} | 
-          Last updated: {new Date().toLocaleTimeString()}
-        </p>
-        <div className="flex gap-2 mt-2">
-          <button 
-            onClick={async () => {
-              try {
-                const res = await axios.get("http://localhost:3001/api/v1/orders");
-                console.log("All orders:", res.data);
-                alert(`Total orders in system: ${res.data.length}\nStatuses: ${res.data.map(o => o.status).join(', ')}`);
-              } catch (err) {
-                console.error("Debug error:", err);
-              }
-            }}
-            className="px-3 py-1 bg-yellow-200 text-yellow-800 rounded text-sm hover:bg-yellow-300"
-          >
-            Check All Orders
-          </button>
-          <button 
-            onClick={() => {
-              setLoading(true);
-              const fetchPendingOrders = async () => {
-                try {
-                  const res = await axios.get("http://localhost:3001/api/v1/orders");
-                  const pending = res.data.filter(order => order.status === "pending");
-                  setPendingOrders(pending);
-                } catch (err) {
-                  console.error("Error refreshing:", err);
-                } finally {
-                  setLoading(false);
-                }
-              };
-              fetchPendingOrders();
-            }}
-            className="px-3 py-1 bg-green-200 text-green-800 rounded text-sm hover:bg-green-300"
-          >
-            🔄 Refresh Now
-          </button>
+      {/* Summary Section */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div className="bg-white p-6 rounded-xl shadow-lg border border-gray-100 hover:shadow-xl transition-shadow">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-lg font-semibold text-gray-800 dairy-heading">Total Pending</h3>
+              <p className="text-3xl font-bold text-yellow-600">{pendingOrders.length}</p>
+            </div>
+            <div className="p-4 rounded-full bg-yellow-50 text-yellow-600">
+              <FaClock size={24} />
+            </div>
+          </div>
+        </div>
+        <div className="bg-white p-6 rounded-xl shadow-lg border border-gray-100 hover:shadow-xl transition-shadow">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-lg font-semibold text-gray-800 dairy-heading">Card Payments</h3>
+              <p className="text-3xl font-bold text-blue-600">
+                {pendingOrders.filter(order => 
+                  order.paymentMethod === "credit-card" || order.paymentMethod === "debit-card"
+                ).length}
+              </p>
+            </div>
+            <div className="p-4 rounded-full bg-blue-50 text-blue-600">
+              <FaCreditCard size={24} />
+            </div>
+          </div>
+        </div>
+        <div className="bg-white p-6 rounded-xl shadow-lg border border-gray-100 hover:shadow-xl transition-shadow">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-lg font-semibold text-gray-800 dairy-heading">Cash on Delivery</h3>
+              <p className="text-3xl font-bold text-green-600">
+                {pendingOrders.filter(order => order.paymentMethod === "cash_on_delivery").length}
+              </p>
+            </div>
+            <div className="p-4 rounded-full bg-green-50 text-green-600">
+              <FaUser size={24} />
+            </div>
+          </div>
         </div>
       </div>
 
       {loading ? (
         <div className="text-center py-8">
-          <p className="text-gray-600">Loading pending orders...</p>
+          <div className="dairy-spinner mx-auto mb-4"></div>
+          <p className="text-gray-600 dairy-text">Loading pending orders...</p>
         </div>
       ) : pendingOrders.length === 0 ? (
         <div className="text-center py-8">
-          <p className="text-gray-600">No pending orders found.</p>
-          <p className="text-sm text-gray-500 mt-2">Debug: Check if orders are being created with 'pending' status</p>
+          <div className="bg-white p-8 rounded-xl shadow-lg border border-gray-100">
+            <FaClock className="mx-auto text-gray-400 mb-4" size={48} />
+            <p className="text-gray-600 dairy-text">No pending orders found.</p>
+            <p className="text-sm text-gray-500 mt-2">All orders have been processed</p>
+          </div>
         </div>
       ) : (
-        <div className="overflow-x-auto">
-          <table className="min-w-full bg-white shadow-md rounded-lg">
-            <thead>
-              <tr className="bg-gray-100">
-                <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Customer</th>
-                <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Product</th>
-                <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Quantity</th>
-                <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Price/Unit</th>
-                <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Total Amount</th>
-                <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Payment Method</th>
-                <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Order Date</th>
-                <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {pendingOrders.map((order) => (
-                <tr key={order._id} className="border-b hover:bg-gray-100">
-                  <td className="px-6 py-4 text-sm text-gray-700">
-                    <div>
-                      <div className="font-semibold">{order.customerId?.fname || order.fullName || "Guest"}</div>
-                      <div className="text-xs text-gray-500">{order.email}</div>
-                      <div className="text-xs text-gray-500">{order.phone}</div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 text-sm text-gray-700">
-                    <div>
-                      <div className="font-semibold">{order.packageId?.name || "Product"}</div>
-                      <div className="text-xs text-gray-500">{order.packageId?.description || "No description"}</div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 text-sm text-gray-700">{order.quantity}</td>
-                  <td className="px-6 py-4 text-sm text-gray-700">₹{order.packageId?.price || "N/A"}</td>
-                  <td className="px-6 py-4 text-sm text-gray-700">₹{(order.packageId?.price * order.quantity) || "N/A"}</td>
-                  <td className="px-6 py-4 text-sm text-gray-700">
-                    <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
-                      order.paymentMethod === "credit-card" || order.paymentMethod === "debit-card"
-                        ? "bg-blue-100 text-blue-800"
-                        : order.paymentMethod === "cash_on_delivery"
-                        ? "bg-yellow-100 text-yellow-800"
-                        : "bg-gray-100 text-gray-800"
-                    }`}>
-                      {order.paymentMethod}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 text-sm text-gray-700">
-                    {new Date(order.createdAt).toLocaleDateString()}
-                  </td>
-                  <td className="px-6 py-4 text-sm text-gray-700">
-                    <button
-                      className="text-green-500 hover:text-green-700 mr-4"
-                      onClick={() => handleApprove(order._id)}
-                    >
-                      Approve
-                    </button>
-                    <button
-                      className="text-red-500 hover:text-red-700"
-                      onClick={() => handleCancel(order._id)}
-                    >
-                      Cancel
-                    </button>
-                  </td>
+        <div className="bg-white shadow-lg rounded-xl border border-gray-100 overflow-hidden">
+          <div className="p-6 border-b border-gray-100">
+            <div className="flex items-center justify-between">
+              <h3 className="text-xl font-semibold text-blue-800 dairy-heading">Pending Orders List</h3>
+              <FaBox className="text-blue-600" size={20} />
+            </div>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="min-w-full">
+              <thead>
+                <tr className="bg-gray-50 border-b border-gray-100">
+                  <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Customer</th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Product</th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Quantity</th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Price/Unit</th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Total Amount</th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Payment Method</th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Order Date</th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Actions</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {pendingOrders.map((order) => (
+                  <tr key={order._id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
+                    <td className="px-6 py-4 text-sm text-gray-700">
+                      <div>
+                        <div className="font-semibold">{order.customerId?.fname || order.fullName || "Guest"}</div>
+                        <div className="text-xs text-gray-500">{order.email}</div>
+                        <div className="text-xs text-gray-500">{order.phone}</div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-700">
+                      <div>
+                        <div className="font-semibold">{order.packageId?.name || "Product"}</div>
+                        <div className="text-xs text-gray-500">{order.packageId?.description || "No description"}</div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-700">{order.quantity}</td>
+                    <td className="px-6 py-4 text-sm text-gray-700 font-semibold">₹{order.packageId?.price || "N/A"}</td>
+                    <td className="px-6 py-4 text-sm text-gray-700 font-semibold">₹{(order.packageId?.price * order.quantity) || "N/A"}</td>
+                    <td className="px-6 py-4 text-sm text-gray-700">
+                      <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                        order.paymentMethod === "credit-card" || order.paymentMethod === "debit-card"
+                          ? "bg-blue-100 text-blue-800 border border-blue-200"
+                          : order.paymentMethod === "cash_on_delivery"
+                          ? "bg-yellow-100 text-yellow-800 border border-yellow-200"
+                          : "bg-gray-100 text-gray-800 border border-gray-200"
+                      }`}>
+                        {order.paymentMethod}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-700">
+                      {new Date(order.createdAt).toLocaleDateString()}
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-700">
+                      <div className="flex space-x-2">
+                        <button
+                          className="text-green-500 hover:text-green-700 p-2 rounded hover:bg-green-100 transition-colors"
+                          onClick={() => handleApprove(order._id)}
+                          title="Approve Order"
+                        >
+                          <FaCheck size={16} />
+                        </button>
+                        <button
+                          className="text-red-500 hover:text-red-700 p-2 rounded hover:bg-red-100 transition-colors"
+                          onClick={() => handleCancel(order._id)}
+                          title="Cancel Order"
+                        >
+                          <FaTimes size={16} />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
     </div>

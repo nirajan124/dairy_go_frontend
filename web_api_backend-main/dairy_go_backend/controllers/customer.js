@@ -176,6 +176,37 @@ exports.deleteCustomer = asyncHandler(async (req, res, next) => {
     res.status(200).json({ success: true, message: "Customer deleted successfully" });
 });
 
+// @desc    Change customer password
+// @route   PUT /api/v1/customers/changePassword/:id
+// @access  Private (Customer or Admin)
+exports.changePassword = asyncHandler(async (req, res, next) => {
+    const { currentPassword, newPassword } = req.body;
+    const customer = await Customer.findById(req.params.id).select("+password");
+    
+    if (!customer) {
+        return res.status(404).json({ message: "Customer not found" });
+    }
+
+    // Only allow customer to change their own password or admin
+    if (req.user.role !== "admin" && req.user.id !== customer.id) {
+        return res.status(403).json({ message: "Access denied." });
+    }
+
+    // Check current password
+    if (!(await customer.matchPassword(currentPassword))) {
+        return res.status(400).json({ message: "Current password is incorrect" });
+    }
+
+    // Update password
+    customer.password = newPassword;
+    await customer.save();
+
+    res.status(200).json({
+        success: true,
+        message: "Password updated successfully"
+    });
+});
+
 // @desc    Upload Single Image
 // @route   POST /api/v1/customers/upload
 // @access  Private (Only Logged-in Users)

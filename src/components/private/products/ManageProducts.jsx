@@ -18,10 +18,12 @@ const ManageProducts = () => {
     const fetchProducts = async () => {
       setLoading(true);
       try {
-        const res = await axios.get("/api/v1/products");
+        const res = await axios.get("http://localhost:3001/api/v1/products");
+        console.log("Fetched products:", res.data); // Debug log
         setProducts(res.data || []);
         setError("");
       } catch (error) {
+        console.error("Error fetching products:", error);
         setError("Failed to fetch products from backend.");
       }
       setLoading(false);
@@ -40,7 +42,7 @@ const ManageProducts = () => {
     setMessage("");
     setError("");
     try {
-      await axios.delete(`/api/v1/products/${id}`);
+      await axios.delete(`http://localhost:3001/api/v1/products/${id}`);
       setMessage("Product deleted successfully!");
     } catch (err) {
       setError("Failed to delete product. Please try again.");
@@ -112,7 +114,7 @@ const ManageProducts = () => {
       if (editImage) {
         form.append("image", editImage);
       }
-      await axios.put(`/api/v1/products/${editProduct._id}`, form, {
+      await axios.put(`http://localhost:3001/api/v1/products/${editProduct._id}`, form, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
       setMessage("Product updated successfully!");
@@ -169,7 +171,30 @@ const ManageProducts = () => {
               products.map((product, idx) => (
                 <tr key={product._id} className={`border-b ${idx % 2 === 0 ? 'bg-white' : 'bg-blue-50'} hover:bg-blue-100 transition`}>
                   <td className="p-3">
-                    <img src={product.image && !product.image.startsWith('http') ? `/uploads/${product.image}` : product.image} alt={product.name} className="w-16 h-16 object-cover rounded-lg border border-gray-200 shadow-sm" onError={e => e.target.style.display='none'} />
+                    {product.image ? (
+                      (() => {
+                        const imageUrl = product.image.startsWith('http') ? product.image : `http://localhost:3001/uploads/${product.image}`;
+                        console.log(`Product: ${product.name}, Image: ${product.image}, URL: ${imageUrl}`);
+                        return (
+                          <img 
+                            src={imageUrl} 
+                            alt={product.name} 
+                            className="w-16 h-16 object-cover rounded-lg border border-gray-200 shadow-sm" 
+                            onError={(e) => {
+                              console.error("Failed to load image:", product.image, "URL:", imageUrl);
+                              e.target.style.display = 'none';
+                            }}
+                            onLoad={() => {
+                              console.log("Successfully loaded image:", imageUrl);
+                            }}
+                          />
+                        );
+                      })()
+                    ) : (
+                      <div className="w-16 h-16 bg-gray-200 rounded-lg border border-gray-300 flex items-center justify-center">
+                        <span className="text-gray-500 text-xs">No Image</span>
+                      </div>
+                    )}
                   </td>
                   <td className="p-3 text-gray-900 font-semibold">{product.name}</td>
                   <td className="p-3 text-gray-700">{product.category}</td>

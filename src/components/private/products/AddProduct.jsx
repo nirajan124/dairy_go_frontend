@@ -1,7 +1,8 @@
 import axios from "axios";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 
 const AddProduct = () => {
+  const [darkMode, setDarkMode] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
     description: "",
@@ -25,6 +26,29 @@ const AddProduct = () => {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+
+  // Load dark mode setting from localStorage
+  useEffect(() => {
+    const savedSettings = localStorage.getItem("adminSettings");
+    if (savedSettings) {
+      const settings = JSON.parse(savedSettings);
+      setDarkMode(settings.darkMode || false);
+    }
+  }, []);
+
+  // Listen for settings changes
+  useEffect(() => {
+    const handleStorageChange = () => {
+      const savedSettings = localStorage.getItem("adminSettings");
+      if (savedSettings) {
+        const settings = JSON.parse(savedSettings);
+        setDarkMode(settings.darkMode || false);
+      }
+    };
+
+    window.addEventListener("storage", handleStorageChange);
+    return () => window.removeEventListener("storage", handleStorageChange);
+  }, []);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -76,7 +100,7 @@ const AddProduct = () => {
           form.append(key, value);
         }
       });
-      await axios.post('/api/v1/products', form, {
+      await axios.post('http://localhost:3001/api/v1/products', form, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
       setMessage("Product added successfully!");

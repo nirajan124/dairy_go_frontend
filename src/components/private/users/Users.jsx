@@ -3,11 +3,35 @@ import axios from "axios";
 import { FaEdit, FaTrash } from "react-icons/fa";
 
 const Users = () => {
+  const [darkMode, setDarkMode] = useState(false);
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [selectedUser, setSelectedUser] = useState(null);
   const [currentUserId, setCurrentUserId] = useState(null);
+
+  // Load dark mode setting from localStorage
+  useEffect(() => {
+    const savedSettings = localStorage.getItem("adminSettings");
+    if (savedSettings) {
+      const settings = JSON.parse(savedSettings);
+      setDarkMode(settings.darkMode || false);
+    }
+  }, []);
+
+  // Listen for settings changes
+  useEffect(() => {
+    const handleStorageChange = () => {
+      const savedSettings = localStorage.getItem("adminSettings");
+      if (savedSettings) {
+        const settings = JSON.parse(savedSettings);
+        setDarkMode(settings.darkMode || false);
+      }
+    };
+
+    window.addEventListener("storage", handleStorageChange);
+    return () => window.removeEventListener("storage", handleStorageChange);
+  }, []);
 
   useEffect(() => {
     const fetchUsers = async () => {

@@ -1,6 +1,6 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const SECRET_KEY = "d2f78ec5c4eb64c0bfe582ae6228a6059806a082724c9193836754dd3b8f14c4"
+const SECRET_KEY = process.env.JWT_SECRET || "this_is_my_secret";
 const Credential = require("../models/Credential")
 
 const register = async (req, res) => {
@@ -44,12 +44,64 @@ const getAdminProfile = async (req, res) => {
   if (!username) return res.status(401).json({ message: "Unauthorized" });
   const cred = await Credential.findOne({ username });
   if (!cred) return res.status(404).json({ message: "Admin not found" });
-  res.json({ username: cred.username, role: cred.role, email: cred.email });
+  
+  res.json({ 
+    username: cred.username, 
+    role: cred.role, 
+    email: cred.email,
+    fullName: cred.fullName || "",
+    phone: cred.phone || "",
+    profileImage: cred.profileImage || "",
+    createdAt: cred.createdAt,
+    updatedAt: cred.updatedAt,
+    lastLogin: new Date(),
+    sessionActive: true
+  });
+};
+
+const updateAdminProfile = async (req, res) => {
+  const username = req.user?.username;
+  if (!username) return res.status(401).json({ message: "Unauthorized" });
+  
+  try {
+    const cred = await Credential.findOne({ username });
+    if (!cred) return res.status(404).json({ message: "Admin not found" });
+
+    // Update fields
+    const { fullName, phone, email } = req.body;
+    if (fullName !== undefined) cred.fullName = fullName;
+    if (phone !== undefined) cred.phone = phone;
+    if (email !== undefined) cred.email = email;
+
+    // Handle file upload if present
+    if (req.file) {
+      cred.profileImage = `/uploads/${req.file.filename}`;
+    }
+
+    await cred.save();
+    
+    res.json({ 
+      username: cred.username, 
+      role: cred.role, 
+      email: cred.email,
+      fullName: cred.fullName || "",
+      phone: cred.phone || "",
+      profileImage: cred.profileImage || "",
+      createdAt: cred.createdAt,
+      updatedAt: cred.updatedAt,
+      lastLogin: new Date(),
+      sessionActive: true
+    });
+  } catch (error) {
+    console.error("Error updating profile:", error);
+    res.status(500).json({ message: "Failed to update profile" });
+  }
 };
 
 module.exports = {
     login,
     register,
     changePassword,
-    getAdminProfile
+    getAdminProfile,
+    updateAdminProfile
 }

@@ -1,71 +1,146 @@
-import React, { useRef, useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { Bell, LogOut, User } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { FaBell, FaUser, FaCog, FaSignOutAlt } from "react-icons/fa";
 
 const Navbar = () => {
-  const navigate = useNavigate();
-  const [dropdownOpen, setDropdownOpen] = useState(false);
-  const dropdownRef = useRef(null);
+  const [darkMode, setDarkMode] = useState(false);
+  const [showDropdown, setShowDropdown] = useState(false);
 
-  const handleProfile = () => { setDropdownOpen(false); navigate("/admin/profile"); };
-  const handleSettings = () => { setDropdownOpen(false); navigate("/admin/settings"); };
-  const handleLogout = () => {
-    localStorage.removeItem("role");
-    localStorage.removeItem("token");
-    setDropdownOpen(false);
-    navigate("/login");
-  };
-
-  // Close dropdown on outside click
+  // Load dark mode setting from localStorage
   useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-        setDropdownOpen(false);
+    const savedSettings = localStorage.getItem("adminSettings");
+    if (savedSettings) {
+      const settings = JSON.parse(savedSettings);
+      setDarkMode(settings.darkMode || false);
+    }
+  }, []);
+
+  // Listen for settings changes
+  useEffect(() => {
+    const handleStorageChange = () => {
+      const savedSettings = localStorage.getItem("adminSettings");
+      if (savedSettings) {
+        const settings = JSON.parse(savedSettings);
+        setDarkMode(settings.darkMode || false);
       }
     };
-    if (dropdownOpen) {
-      document.addEventListener("mousedown", handleClickOutside);
-    } else {
-      document.removeEventListener("mousedown", handleClickOutside);
-    }
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [dropdownOpen]);
+
+    window.addEventListener("storage", handleStorageChange);
+    return () => window.removeEventListener("storage", handleStorageChange);
+  }, []);
 
   return (
-    <nav className="bg-gray-900 text-white p-4 flex justify-between items-center shadow-md">
-      {/* Admin Panel Title */}
-      <h1 className="text-lg font-semibold">Admin Dashboard</h1>
+    <nav className={`px-6 py-4 shadow-sm ${darkMode ? 'bg-gray-800 border-b border-gray-700' : 'bg-white border-b border-gray-200'}`}>
+      <div className="flex items-center justify-between">
+        {/* Left side */}
+        <div className="flex items-center space-x-4">
+          <h1 className={`text-2xl font-bold ${darkMode ? 'text-white' : 'text-gray-800'}`}>
+            Admin Dashboard
+          </h1>
+          <span className={`px-3 py-1 rounded-full text-sm font-medium ${
+            darkMode 
+              ? 'bg-blue-600 text-white' 
+              : 'bg-blue-100 text-blue-700'
+          }`}>
+            Admin Panel
+          </span>
+        </div>
 
-      {/* Right Section */}
-      <div className="flex items-center gap-6">
-        {/* Notifications Icon */}
-        <button className="relative p-2 rounded-full hover:bg-gray-800">
-          <Bell size={20} />
-          <span className="absolute top-0 right-0 bg-red-500 text-xs text-white px-1.5 py-0.5 rounded-full">3</span>
-        </button>
+        {/* Right side */}
+        <div className="flex items-center space-x-4">
+          {/* Notifications */}
+          <div className="relative">
+            <button className={`p-2 rounded-lg transition-colors ${
+              darkMode 
+                ? 'text-gray-300 hover:text-white hover:bg-gray-700' 
+                : 'text-gray-600 hover:text-gray-800 hover:bg-gray-100'
+            }`}>
+              <FaBell className="w-5 h-5" />
+              <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                3
+              </span>
+            </button>
+          </div>
 
-        {/* User Profile Dropdown */}
-        <div className="relative" ref={dropdownRef}>
-          <button
-            className="flex items-center gap-2 p-2 rounded-lg hover:bg-gray-800"
-            onClick={() => setDropdownOpen((open) => !open)}
-          >
-            <User size={20} />
-            <span className="hidden md:inline">Admin</span>
-          </button>
+          {/* User Menu */}
+          <div className="relative">
+            <button
+              onClick={() => setShowDropdown(!showDropdown)}
+              className={`flex items-center space-x-2 p-2 rounded-lg transition-colors ${
+                darkMode 
+                  ? 'text-gray-300 hover:text-white hover:bg-gray-700' 
+                  : 'text-gray-600 hover:text-gray-800 hover:bg-gray-100'
+              }`}
+            >
+              <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                darkMode ? 'bg-gray-600' : 'bg-gray-200'
+              }`}>
+                <FaUser className="w-4 h-4" />
+              </div>
+              <span className={`font-medium ${darkMode ? 'text-white' : 'text-gray-800'}`}>Admin</span>
+            </button>
 
-          {/* Dropdown Menu */}
-          {dropdownOpen && (
-            <div className="absolute right-0 mt-2 w-40 bg-gray-800 rounded-lg shadow-lg z-50">
-              <button className="block w-full px-4 py-2 text-left hover:bg-gray-700" onClick={handleProfile}>Profile</button>
-              <button className="block w-full px-4 py-2 text-left hover:bg-gray-700" onClick={handleSettings}>Settings</button>
-              <button className="block w-full px-4 py-2 text-left hover:bg-red-700 flex items-center gap-2" onClick={handleLogout}>
-                <LogOut size={18} /> Logout
-              </button>
-            </div>
-          )}
+            {/* Dropdown Menu */}
+            {showDropdown && (
+              <div className={`absolute right-0 mt-2 w-48 rounded-lg shadow-lg py-2 z-50 ${
+                darkMode ? 'bg-gray-800 border border-gray-700' : 'bg-white border border-gray-200'
+              }`}>
+                <button
+                  onClick={() => {
+                    // Navigate to profile
+                    setShowDropdown(false);
+                  }}
+                  className={`w-full flex items-center space-x-3 px-4 py-2 text-left transition-colors ${
+                    darkMode 
+                      ? 'text-gray-300 hover:text-white hover:bg-gray-700' 
+                      : 'text-gray-700 hover:text-gray-800 hover:bg-gray-100'
+                  }`}
+                >
+                  <FaUser className="w-4 h-4" />
+                  <span>Profile</span>
+                </button>
+                <button
+                  onClick={() => {
+                    // Navigate to settings
+                    setShowDropdown(false);
+                  }}
+                  className={`w-full flex items-center space-x-3 px-4 py-2 text-left transition-colors ${
+                    darkMode 
+                      ? 'text-gray-300 hover:text-white hover:bg-gray-700' 
+                      : 'text-gray-700 hover:text-gray-800 hover:bg-gray-100'
+                  }`}
+                >
+                  <FaCog className="w-4 h-4" />
+                  <span>Settings</span>
+                </button>
+                <hr className={`my-2 ${darkMode ? 'border-gray-700' : 'border-gray-200'}`} />
+                <button
+                  onClick={() => {
+                    localStorage.removeItem("token");
+                    localStorage.removeItem("userId");
+                    window.location.href = "/";
+                  }}
+                  className={`w-full flex items-center space-x-3 px-4 py-2 text-left transition-colors ${
+                    darkMode 
+                      ? 'text-red-400 hover:text-red-300 hover:bg-red-900' 
+                      : 'text-red-600 hover:text-red-700 hover:bg-red-50'
+                  }`}
+                >
+                  <FaSignOutAlt className="w-4 h-4" />
+                  <span>Logout</span>
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </div>
+
+      {/* Click outside to close dropdown */}
+      {showDropdown && (
+        <div
+          className="fixed inset-0 z-40"
+          onClick={() => setShowDropdown(false)}
+        />
+      )}
     </nav>
   );
 };
